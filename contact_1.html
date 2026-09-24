@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us — MyNextStepHealth{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Contact page styles. Duplicated here so this page renders
+       correctly even if base.html doesn't define them. */
+    .contact-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:24px;align-items:start}
+    .contact-detail{display:flex;gap:14px;align-items:flex-start;padding:16px 0;
+        border-bottom:1px solid var(--sky-mid,#D0E4F7)}
+    .contact-detail:last-of-type{border-bottom:none}
+    .contact-icon{width:42px;height:42px;flex-shrink:0;border-radius:11px;
+        background:var(--sky,#EBF3FB);color:var(--navy,#1B3A6B);
+        display:flex;align-items:center;justify-content:center;font-size:1.05rem}
+    .contact-detail h3{font-size:.95rem;margin-bottom:2px;font-weight:700;
+        font-family:var(--font-body,var(--f-body,sans-serif))}
+    .contact-detail p{font-size:.88rem;color:var(--gray-600,#5A7A99);line-height:1.55}
+    .contact-detail a{font-size:.89rem;color:var(--blue,#3A7BD5);font-weight:600;word-break:break-word}
+    .char-count{font-size:.76rem;color:var(--gray-400,#9DB4CC);text-align:right;margin:5px 2px 0}
+    /* Honeypot — hidden from people, tempting to bots */
+    .hp-field{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+    @media (max-width:860px){ .contact-grid{grid-template-columns:1fr} }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-inner">
+        <span class="page-eyebrow">Get in touch</span>
+        <h1>Contact us</h1>
+        <p>Questions about the platform, a demo for your clinic, or anything else —
+           we'd love to hear from you.</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="contact-grid">
+
+        <!-- ── Details ── -->
+        <div class="card">
+            <h2 style="font-size:1.2rem;margin-bottom:4px">Reach us directly</h2>
+            <p style="font-size:.88rem;color:var(--gray-600);margin-bottom:8px">
+                We aim to reply to all enquiries within two working days.</p>
+
+            <div class="contact-detail">
+                <div class="contact-icon" aria-hidden="true">&#9993;</div>
+                <div>
+                    <h3>Email us</h3>
+                    <a href="mailto:mynextstep@gmail.com">mynextstep@gmail.com</a>
+                    <p style="margin-top:3px">Or use the form — it comes straight to this inbox.</p>
+                </div>
+            </div>
+
+            <div class="contact-detail">
+                <div class="contact-icon" aria-hidden="true">&#127973;</div>
+                <div>
+                    <h3>Clinics &amp; hospitals</h3>
+                    <p>Ask about a demo, pricing, or how deployment works for your practice.</p>
+                </div>
+            </div>
+
+            <div class="contact-detail">
+                <div class="contact-icon" aria-hidden="true">&#128269;</div>
+                <div>
+                    <h3>About a request you sent</h3>
+                    <p>Please contact your clinic directly and quote your reference number —
+                       they hold your records, not us.</p>
+                </div>
+            </div>
+
+            <div class="emergency" role="note" style="margin:18px 0 0">
+                <span class="ic" aria-hidden="true">&#9888;</span>
+                <div>
+                    <strong>Not for medical emergencies</strong>
+                    <p>This inbox is not monitored around the clock. If you need urgent
+                       medical help, contact your local emergency services or go to your
+                       nearest emergency department.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Message form ── -->
+        <div class="card">
+            <h2 style="font-size:1.2rem;margin-bottom:4px">Send us a message</h2>
+            <p style="font-size:.88rem;color:var(--gray-600);margin-bottom:18px">
+                Fields marked with * are required.</p>
+
+            <!-- Posts to Flask, which sends the email server-side -->
+            <form method="POST" action="{{ url_for('contact') }}" novalidate id="contactForm">
+
+                <!-- Spam trap: hidden from people. Bots fill it in. -->
+                <div class="hp-field" aria-hidden="true">
+                    <label for="website">Leave this blank</label>
+                    <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Your name <span class="required">*</span></label>
+                    <input class="form-control" type="text" id="name" name="name" required
+                           autocomplete="name" placeholder="e.g. Jane Smith"
+                           value="{{ form_data.name if form_data else '' }}">
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Your email <span class="required">*</span></label>
+                        <input class="form-control" type="email" id="email" name="email" required
+                               autocomplete="email" inputmode="email" placeholder="jane@example.com"
+                               value="{{ form_data.email if form_data else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="organisation">Organisation</label>
+                        <input class="form-control" type="text" id="organisation" name="organisation"
+                               placeholder="Optional"
+                               value="{{ form_data.organisation if form_data else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="subject">What's this about? <span class="required">*</span></label>
+                    <select class="form-control" id="subject" name="subject" required>
+                        <option value="" disabled {{ '' if form_data and form_data.subject else 'selected' }}>Choose an option...</option>
+                        {% for value, label in [
+                            ('Demo request', 'Request a demo for my clinic'),
+                            ('Pricing enquiry', 'Pricing and deployment'),
+                            ('Support', 'Help with the platform'),
+                            ('General enquiry', 'Something else')] %}
+                        <option value="{{ value }}"
+                            {{ 'selected' if form_data and form_data.subject == value else '' }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:16px">
+                    <label class="form-label" for="message">Your message <span class="required">*</span></label>
+                    <textarea class="form-control" id="message" name="message" rows="6" required
+                        placeholder="Tell us how we can help. Please don't include personal medical details here."
+                    >{{ form_data.message if form_data else '' }}</textarea>
+                    <p class="char-count" id="msgCount">0 characters</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="sendBtn">
+                    <span id="sendLabel">Send message</span>
+                    <span aria-hidden="true" id="sendArrow">&rarr;</span>
+                </button>
+
+                <p style="font-size:.78rem;color:var(--gray-600);margin-top:14px;line-height:1.5">
+                    We'll only use your details to reply to this enquiry.
+                    Please don't send confidential medical information through this form.</p>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    var box = document.getElementById("message");
+    var out = document.getElementById("msgCount");
+    if (box && out) {
+        var update = function () {
+            var n = box.value.length;
+            out.textContent = n + (n === 1 ? " character" : " characters");
+        };
+        box.addEventListener("input", update);
+        update();
+    }
+
+    /* Loading state — sending mail takes a second or two */
+    var form = document.getElementById("contactForm");
+    form.addEventListener("submit", function () {
+        if (!form.checkValidity()) return;
+        var btn = document.getElementById("sendBtn");
+        btn.disabled = true;
+        document.getElementById("sendArrow").outerHTML = '<span class="spinner" aria-hidden="true"></span>';
+        document.getElementById("sendLabel").textContent = "Sending...";
+    });
+})();
+</script>
+{% endblock %}

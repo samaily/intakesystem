@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#1B3A6B">
+<title>{% block title %}MyNextStepHealth{% endblock %}</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   MyNextStepHealth — single-file edition
+   Home + Patient Intake + Provider Dashboard in one page,
+   switched client-side. All styles in this one block.
+   ══════════════════════════════════════════════════════════ */
+
+:root{
+    --navy:#1B3A6B; --navy-dark:#122a52; --navy-deep:#0d1f3c; --navy-light:#2a4f8a;
+    --blue:#3A7BD5; --blue-soft:#5B9BD5;
+    --sky:#EBF3FB; --sky-mid:#D0E4F7;
+    --white:#fff; --canvas:#F6F9FC; --gray-200:#EEF2F7;
+    --gray-400:#9DB4CC; --gray-600:#5A7A99; --gray-800:#2C3E55;
+    --green:#1E8449; --green-bg:#EAFAF1; --green-line:#A9DFBF;
+    --amber:#B7770D; --amber-bg:#FFF7E6; --amber-line:#F5D48A;
+    --red:#C0392B;  --red-bg:#FDF0EF;  --red-line:#F5B7B1;
+    --r-sm:8px; --r-md:14px; --r-lg:22px; --r-pill:999px;
+    --sh-xs:0 1px 2px rgba(27,58,107,.05);
+    --sh-sm:0 1px 3px rgba(27,58,107,.06),0 2px 8px rgba(27,58,107,.05);
+    --sh-md:0 4px 12px rgba(27,58,107,.08),0 12px 28px rgba(27,58,107,.08);
+    --sh-lg:0 8px 24px rgba(27,58,107,.12),0 24px 56px rgba(27,58,107,.12);
+    --f-head:'DM Serif Display',Georgia,serif;
+    --f-body:'DM Sans',system-ui,sans-serif;
+    --tr:all .2s cubic-bezier(.4,0,.2,1);
+    --cw:1160px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+    font-family:var(--f-body);background:var(--canvas);color:var(--gray-800);
+    line-height:1.65;min-height:100vh;display:flex;flex-direction:column;
+    -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--f-head);font-weight:400;color:var(--navy);line-height:1.2;letter-spacing:-.015em}
+img,svg{max-width:100%}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:4px}
+::selection{background:var(--sky-mid);color:var(--navy)}
+
+.skip-link{position:absolute;left:-9999px;top:0;z-index:300;background:var(--navy);color:#fff;
+    padding:12px 20px;font-weight:600;text-decoration:none;border-radius:0 0 var(--r-sm) 0}
+.skip-link:focus{left:0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ── Nav ── */
+.nav{background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(14px);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid var(--sky-mid);padding:0 28px;position:sticky;top:0;z-index:100;box-shadow:var(--sh-xs)}
+.nav-inner{max-width:var(--cw);margin:0 auto;display:flex;align-items:center;
+    justify-content:space-between;height:72px;gap:16px;position:relative}
+.nav-brand{display:flex;align-items:center;gap:11px;text-decoration:none;flex-shrink:0;background:none;border:none;cursor:pointer}
+.nav-logo{width:38px;height:38px;background:linear-gradient(135deg,var(--navy),var(--navy-light));
+    border-radius:10px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(27,58,107,.22);transition:var(--tr)}
+.nav-brand:hover .nav-logo{transform:translateY(-1px);box-shadow:0 4px 14px rgba(27,58,107,.3)}
+.nav-brand-name{font-family:var(--f-head);font-size:1.3rem;color:var(--navy);white-space:nowrap}
+.nav-links{display:flex;align-items:center;justify-content:flex-end;
+    gap:2px;list-style:none;flex-wrap:wrap}
+.nav-links a{display:block;text-decoration:none;color:var(--navy);font-size:.92rem;font-weight:500;
+    padding:9px 15px;border-radius:var(--r-sm);transition:var(--tr);white-space:nowrap;cursor:pointer;
+    position:relative}
+.nav-links a:hover{color:var(--blue);background:var(--sky)}
+.nav-links a.active{color:var(--navy);font-weight:700}
+.nav-links a.active::after{content:'';position:absolute;left:15px;right:15px;bottom:3px;
+    height:2px;background:var(--navy);border-radius:2px}
+
+/* ── Page switching ── */
+.page{display:none;animation:pageIn .3s cubic-bezier(.4,0,.2,1)}
+.page.is-active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.main{flex:1}
+
+/* ── Page header strip ── */
+.page-header{background:linear-gradient(135deg,var(--navy-dark) 0%,var(--navy) 55%,var(--navy-light) 100%);
+    padding:56px 28px 48px;color:#fff;position:relative;overflow:hidden}
+.page-header::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;
+    background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none}
+.page-header::after{content:'';position:absolute;bottom:-120px;left:-80px;width:260px;height:260px;
+    background:rgba(255,255,255,.03);border-radius:50%;pointer-events:none}
+.page-header-inner{max-width:var(--cw);margin:0 auto;position:relative}
+.page-header h1{font-size:clamp(1.7rem,4vw,2.4rem);color:#fff;margin-bottom:10px}
+.page-header p{color:rgba(255,255,255,.78);font-size:1.05rem;max-width:62ch}
+.page-eyebrow{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:rgba(255,255,255,.62);margin-bottom:10px;font-family:var(--f-body)}
+
+/* ── Containers, cards ── */
+.container{max-width:var(--cw);margin:0 auto;padding:40px 28px}
+.container-narrow{max-width:820px;margin:0 auto;padding:40px 28px}
+.card{background:#fff;border-radius:var(--r-md);border:1px solid var(--sky-mid);box-shadow:var(--sh-sm);padding:30px}
+.card-flush{padding:0;overflow:hidden}
+.card-header{background:var(--sky);border-bottom:1px solid var(--sky-mid);padding:18px 26px}
+.card-header h2,.card-header h3{margin:0}
+.card-header p{font-size:.87rem;color:var(--gray-600);margin-top:3px}
+.card-body{padding:26px}
+.card-interactive{transition:var(--tr)}
+.card-interactive:hover{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:var(--blue-soft)}
+
+.grid{display:grid;gap:18px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 26px;
+    min-height:47px;border-radius:var(--r-pill);font-family:var(--f-body);font-size:.95rem;font-weight:600;
+    cursor:pointer;border:2px solid transparent;text-decoration:none;transition:var(--tr);white-space:nowrap}
+.btn:active{transform:translateY(0)!important}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important}
+.btn-primary{background:var(--navy);color:#fff;box-shadow:0 2px 8px rgba(27,58,107,.22)}
+.btn-primary:hover:not(:disabled){background:var(--navy-light);transform:translateY(-1px);box-shadow:var(--sh-md)}
+.btn-outline{background:#fff;color:var(--navy);border-color:var(--navy)}
+.btn-outline:hover:not(:disabled){background:var(--sky);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--gray-600)}
+.btn-ghost:hover:not(:disabled){background:var(--sky);color:var(--navy)}
+.btn-white{background:#fff;color:var(--navy)}
+.btn-white:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--sh-md)}
+.btn-hollow{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.5)}
+.btn-hollow:hover:not(:disabled){background:rgba(255,255,255,.18)}
+.btn-sm{padding:8px 18px;min-height:38px;font-size:.85rem}
+.btn-lg{padding:16px 34px;min-height:54px;font-size:1.02rem}
+.btn-block{width:100%}
+
+/* ── Forms ── */
+.form-group{margin-bottom:22px}
+.form-label{display:block;font-weight:600;font-size:.88rem;color:var(--navy);margin-bottom:7px;letter-spacing:.01em}
+.form-label .required{color:var(--red);margin-left:2px}
+.form-control{width:100%;padding:13px 16px;min-height:48px;border:1.5px solid var(--sky-mid);
+    border-radius:var(--r-sm);font-family:var(--f-body);font-size:.95rem;color:var(--gray-800);
+    background:#fff;transition:border-color .16s ease,box-shadow .16s ease;outline:none}
+.form-control:hover:not(:disabled){border-color:var(--blue-soft)}
+.form-control:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(58,123,213,.13)}
+.form-control::placeholder{color:var(--gray-400)}
+select.form-control{cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:42px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%231B3A6B' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 16px center}
+textarea.form-control{resize:vertical;min-height:120px;line-height:1.6}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+.form-hint{font-size:.81rem;color:var(--gray-600);margin:4px 0 8px;line-height:1.5}
+.field-error{display:none;font-size:.83rem;font-weight:600;color:var(--red);margin-top:6px}
+.form-group.has-error .field-error{display:block}
+.form-group.has-error .form-control{border-color:var(--red);box-shadow:0 0 0 4px rgba(231,76,60,.11)}
+.char-count{font-size:.76rem;color:var(--gray-400);text-align:right;margin:5px 2px 0}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:var(--r-pill);
+    font-size:.78rem;font-weight:600;letter-spacing:.02em;border:1px solid transparent;white-space:nowrap}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge-new{background:var(--sky);color:var(--navy);border-color:var(--sky-mid)}
+.badge-in-progress{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
+.badge-complete{background:var(--green-bg);color:var(--green);border-color:var(--green-line)}
+.badge-high{background:var(--red-bg);color:var(--red);border-color:var(--red-line)}
+.badge-medium{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
+.badge-low{background:var(--green-bg);color:var(--green);border-color:var(--green-line)}
+
+/* ── Emergency notice ── */
+.emergency{background:var(--amber-bg);border:1.5px solid var(--amber-line);border-left:5px solid #d99a1b;
+    border-radius:var(--r-sm);padding:16px 20px;display:flex;gap:13px;align-items:flex-start;margin-bottom:26px}
+.emergency .ic{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.emergency strong{display:block;color:#7c3d06;font-size:.94rem;margin-bottom:3px}
+.emergency p{font-size:.86rem;color:#7d5a2c;line-height:1.6}
+
+/* ── Progress steps ── */
+.progress-shell{margin:0 0 26px}
+.progress-steps{display:flex;align-items:center;list-style:none;margin:0 0 12px}
+.progress-step{display:flex;align-items:center;flex:1;min-width:0}
+.progress-step:last-child{flex:0}
+.progress-dot{width:38px;height:38px;border-radius:50%;background:#fff;border:2px solid var(--sky-mid);
+    color:var(--gray-600);font-size:.85rem;font-weight:700;display:flex;align-items:center;
+    justify-content:center;flex-shrink:0;transition:var(--tr);box-shadow:var(--sh-xs);font-family:var(--f-body)}
+.progress-step.is-active .progress-dot{border-color:var(--navy);background:var(--navy);color:#fff;
+    box-shadow:0 0 0 5px rgba(27,58,107,.12),var(--sh-xs);transform:scale(1.06)}
+.progress-step.is-done .progress-dot{border-color:var(--navy);background:var(--sky);color:var(--navy)}
+.progress-line{height:3px;background:var(--sky-mid);flex:1;margin:0 10px;border-radius:3px;transition:var(--tr)}
+.progress-step.is-done .progress-line{background:var(--navy)}
+.progress-step:last-child .progress-line{display:none}
+.progress-caption{font-size:.9rem;font-weight:700;color:var(--navy)}
+.progress-caption small{font-weight:500;color:var(--gray-600);font-size:.9rem}
+
+.step-panel[hidden]{display:none}
+.step-panel{animation:pageIn .28s ease}
+
+/* ── Urgency selector ── */
+.urgency-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.urgency-option{position:absolute;opacity:0;width:1px;height:1px}
+.urgency-label{display:flex;flex-direction:column;gap:5px;padding:17px 15px;border:2px solid var(--sky-mid);
+    border-radius:var(--r-sm);cursor:pointer;transition:var(--tr);background:#fff}
+.urgency-label .lt{font-size:.93rem;font-weight:700;color:var(--navy)}
+.urgency-label .ld{font-size:.79rem;color:var(--gray-600);line-height:1.5}
+.urgency-label:hover{border-color:var(--navy);box-shadow:var(--sh-sm);transform:translateY(-1px)}
+#urg-low:checked+.urgency-label{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 4px rgba(39,174,96,.1)}
+#urg-med:checked+.urgency-label{border-color:#E67E22;background:var(--amber-bg);box-shadow:0 0 0 4px rgba(230,126,34,.1)}
+#urg-high:checked+.urgency-label{border-color:var(--red);background:var(--red-bg);box-shadow:0 0 0 4px rgba(231,76,60,.1)}
+.urgency-label:focus-within{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── Review list ── */
+.review-list{background:var(--sky);border:1px solid var(--sky-mid);border-radius:var(--r-sm);padding:6px 22px;margin:0}
+.review-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+    padding:14px 0;border-bottom:1px solid var(--sky-mid)}
+.review-row:last-child{border-bottom:none}
+.review-row dt{font-size:.84rem;font-weight:700;color:var(--gray-600);flex-shrink:0;display:flex;align-items:baseline;gap:6px}
+.review-row dd{font-size:.95rem;font-weight:600;color:var(--navy);text-align:right;
+    overflow-wrap:anywhere;white-space:pre-line;max-width:62%;line-height:1.5}
+.edit-link{background:none;border:none;padding:3px 6px;font-family:var(--f-body);font-size:.78rem;
+    font-weight:700;color:var(--blue);text-decoration:underline;text-underline-offset:2px;cursor:pointer;border-radius:6px}
+.edit-link:hover{background:rgba(58,123,213,.1)}
+
+/* ── Step nav ── */
+.step-nav{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.step-nav .btn-primary{margin-left:auto}
+
+/* ── Tables ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table{width:100%;border-collapse:collapse;font-size:.92rem}
+.table th{text-align:left;font-size:.76rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--gray-600);background:var(--sky);padding:13px 16px;border-bottom:1.5px solid var(--sky-mid);white-space:nowrap}
+.table td{padding:15px 16px;border-bottom:1px solid var(--gray-200);vertical-align:middle}
+.table tbody tr{transition:background .14s ease;cursor:pointer}
+.table tbody tr:hover{background:var(--sky)}
+.table tbody tr:last-child td{border-bottom:none}
+
+/* ── Stats ── */
+.stat-label{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-600)}
+.stat-value{font-family:var(--f-head);font-size:2.1rem;color:var(--navy);line-height:1.1;margin-top:6px}
+.stat-meta{font-size:.83rem;color:var(--gray-600);margin-top:3px}
+
+/* ── Empty state / spinner ── */
+.empty-state{text-align:center;padding:56px 24px}
+.empty-icon{width:66px;height:66px;margin:0 auto 18px;border-radius:var(--r-md);background:var(--sky);
+    display:flex;align-items:center;justify-content:center;font-size:1.7rem;color:var(--blue-soft)}
+.empty-state h3{font-size:1.25rem;margin-bottom:8px}
+.empty-state p{color:var(--gray-600);max-width:44ch;margin:0 auto 22px}
+.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;
+    border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Home hero ── */
+.hero{background:linear-gradient(135deg,var(--navy-deep) 0%,var(--navy) 50%,var(--navy-light) 100%);
+    color:#fff;padding:84px 28px 72px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:420px;height:420px;
+    background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-140px;left:-60px;width:320px;height:320px;
+    background:rgba(255,255,255,.03);border-radius:50%;pointer-events:none}
+.hero-inner{max-width:var(--cw);margin:0 auto;position:relative}
+.hero h1{font-size:clamp(2.1rem,5vw,3.3rem);color:#fff;max-width:16ch;margin-bottom:18px}
+.hero h1 em{font-style:italic;color:#A9C8EE}
+.hero p.lede{font-size:clamp(1rem,2vw,1.15rem);color:rgba(255,255,255,.8);max-width:56ch;margin-bottom:30px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:40px;margin-top:52px;flex-wrap:wrap}
+.hero-stat .n{font-family:var(--f-head);font-size:1.9rem;color:#fff}
+.hero-stat .l{font-size:.82rem;color:rgba(255,255,255,.6);letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+
+.feature-icon{width:48px;height:48px;border-radius:12px;background:var(--sky);color:var(--navy);
+    display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:1.25rem}
+.section-title{text-align:center;margin-bottom:8px;font-size:clamp(1.5rem,3vw,2rem)}
+.section-sub{text-align:center;color:var(--gray-600);max-width:56ch;margin:0 auto 36px}
+
+.how-step{position:relative;padding:26px 24px}
+.how-num{position:absolute;top:-16px;left:24px;width:34px;height:34px;border-radius:50%;
+    background:var(--navy);color:#fff;font-weight:700;font-size:.9rem;display:flex;
+    align-items:center;justify-content:center;font-family:var(--f-body);box-shadow:0 2px 8px rgba(27,58,107,.3)}
+
+/* ── Confirmation ── */
+.confirm-icon{width:74px;height:74px;margin:0 auto 20px;border-radius:50%;background:var(--green-bg);
+    border:2px solid var(--green-line);display:flex;align-items:center;justify-content:center;font-size:2rem}
+.ref-box{background:var(--sky);border:1.5px dashed var(--blue-soft);border-radius:var(--r-sm);
+    padding:16px 22px;display:inline-block;margin:6px 0 4px}
+.ref-box .rn{font-family:var(--f-head);font-size:1.6rem;color:var(--navy);letter-spacing:.04em}
+
+/* ── Footer ── */
+.footer{background:var(--navy-dark);color:rgba(255,255,255,.58);text-align:center;
+    padding:26px 28px;font-size:.82rem;line-height:1.7;margin-top:auto}
+.footer strong{color:rgba(255,255,255,.92)}
+
+
+/* ── Contact page ── */
+.contact-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:24px;align-items:start}
+.contact-detail{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--sky-mid)}
+.contact-detail:last-of-type{border-bottom:none}
+.contact-icon{width:42px;height:42px;flex-shrink:0;border-radius:11px;background:var(--sky);
+    color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:1.05rem}
+.contact-detail h3{font-size:.95rem;margin-bottom:2px;font-family:var(--f-body);font-weight:700}
+.contact-detail p{font-size:.88rem;color:var(--gray-600);line-height:1.55}
+.contact-detail a{font-size:.89rem;color:var(--blue);font-weight:600;word-break:break-word}
+.contact-sent{display:none;background:var(--green-bg);border:1.5px solid var(--green-line);
+    border-radius:var(--r-sm);padding:16px 18px;color:#14663f;font-size:.9rem;font-weight:600;
+    display:none;gap:10px;align-items:flex-start}
+.contact-sent.show{display:flex}
+
+/* ── Footer provider link ── */
+.footer-provider{margin-top:12px}
+.footer-provider a{color:rgba(255,255,255,.42);font-size:.78rem;text-decoration:none}
+.footer-provider a:hover{color:rgba(255,255,255,.75);text-decoration:underline}
+
+/* ── Responsive ── */
+@media (max-width:980px){
+    .grid-4{grid-template-columns:repeat(2,1fr)}
+    .grid-3{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:860px){
+    .nav-inner{flex-direction:column;height:auto;gap:6px;padding:12px 0 4px}
+    .nav-links{justify-content:center;gap:0}
+    .nav-links a{padding:9px 12px;font-size:.88rem}
+}
+@media (max-width:768px){
+    .nav{padding:0 16px}.nav-brand-name{font-size:1.05rem}
+    .nav-links a{padding:8px 10px;font-size:.84rem}
+    .page-header{padding:40px 16px 32px}
+    .hero{padding:56px 16px 48px}
+    .hero-stats{gap:24px;margin-top:36px}
+    .container,.container-narrow{padding:24px 16px}
+    .card{padding:22px}.card-body{padding:20px}.card-header{padding:15px 18px}
+    .form-grid{grid-template-columns:1fr}
+    .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+    .contact-grid{grid-template-columns:1fr}
+    .urgency-selector{grid-template-columns:1fr}
+    .progress-dot{width:32px;height:32px;font-size:.8rem}
+    .progress-line{margin:0 6px}
+    .step-nav .btn,.step-nav .btn-primary{width:100%;margin-left:0}
+    .review-row{flex-direction:column;gap:4px}
+    .review-row dd{text-align:left;max-width:100%}
+    .table th{font-size:.7rem;padding:10px 12px}.table td{padding:12px}
+}
+@media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+    .spinner{animation-duration:1.5s!important;animation-iteration-count:infinite!important}
+}
+
+/* ── Compatibility aliases ──────────────────────────────────
+   Existing templates use these longer token names. Mapped to
+   the same values so nothing needs editing.
+   ────────────────────────────────────────────────────────── */
+:root{
+    --radius-sm:var(--r-sm); --radius-md:var(--r-md); --radius-lg:var(--r-lg);
+    --shadow-sm:var(--sh-sm); --shadow-md:var(--sh-md); --shadow-lg:var(--sh-lg);
+    --font-heading:var(--f-head); --font-body:var(--f-body);
+    --transition:var(--tr);
+    --gray-100:var(--canvas);
+    --orange:#E67E22;
+}
+
+/* Retained for any template still using it */
+.nav-cta{background:var(--navy)!important;color:#fff!important;border-radius:var(--r-pill)!important;
+    font-weight:600!important;box-shadow:0 2px 8px rgba(27,58,107,.24)}
+.nav-cta:hover{background:var(--navy-light)!important;transform:translateY(-1px)}
+
+/* ── Flash messages ── */
+.flash-container{max-width:var(--cw);margin:16px auto 0;padding:0 28px}
+.flash{padding:14px 18px;border-radius:var(--r-md);font-size:.9rem;font-weight:500;
+    display:flex;align-items:flex-start;gap:11px;margin-bottom:10px;border:1px solid;
+    border-left-width:4px;box-shadow:var(--sh-xs);animation:slideDown .3s cubic-bezier(.4,0,.2,1)}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.flash-success{background:var(--green-bg);color:#1e8449;border-color:var(--green-line)}
+.flash-error{background:var(--red-bg);color:#c0392b;border-color:var(--red-line)}
+.flash-dismiss{margin-left:auto;background:none;border:none;color:inherit;opacity:.55;
+    font-size:1.15rem;line-height:1;cursor:pointer;padding:2px 6px;border-radius:6px}
+.flash-dismiss:hover{opacity:1;background:rgba(0,0,0,.06)}
+
+/* ── Closing CTA band ── */
+.cta-band{background:var(--sky);border-top:1px solid var(--sky-mid);border-bottom:1px solid var(--sky-mid);
+    padding:60px 28px;text-align:center;margin-top:56px}
+.cta-band h2{font-size:clamp(1.4rem,3vw,1.9rem);margin-bottom:10px}
+.cta-band p{color:var(--gray-600);max-width:52ch;margin:0 auto 24px;line-height:1.6}
+
+/* ── Footer provider link ── */
+.footer-provider{margin-top:12px}
+.footer-provider a{color:rgba(255,255,255,.45);font-size:.78rem;text-decoration:none}
+.footer-provider a:hover{color:rgba(255,255,255,.8);text-decoration:underline}
+
+@media (max-width:768px){
+    .flash-container{padding:0 16px}
+    .cta-band{padding:44px 16px;margin-top:40px}
+}
+</style>
+
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<!-- ─── Navigation ─── -->
+<nav class="nav">
+    <div class="nav-inner">
+        <a href="{{ url_for('index') }}" class="nav-brand">
+            <span class="nav-logo" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 19V9.5L12 4l7 5.5V19h-5v-6h-4v6H5z" fill="#fff"/>
+                </svg>
+            </span>
+            <span class="nav-brand-name">MyNextStepHealth</span>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}"
+                   {% if request.endpoint == 'index' %}class="active" aria-current="page"{% endif %}>Home</a></li>
+            <li><a href="{{ url_for('index') }}#how-it-works">How It Works</a></li>
+            <li><a href="{{ url_for('index') }}#for-clinics">For Clinics</a></li>
+
+            <li><a href="{{ url_for('index') }}#contact">Contact</a></li>
+
+            {# Staff-only. Hidden from patients; appears after login. #}
+            {% if current_provider %}
+                <li><a href="{{ url_for('dashboard') }}"
+                       {% if request.endpoint in ['dashboard','patient_detail'] %}class="active" aria-current="page"{% endif %}>Dashboard</a></li>
+                <li>
+                    <form method="POST" action="/logout" style="display:inline">
+                        <button type="submit" class="btn btn-ghost btn-sm">Log out</button>
+                    </form>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+<!-- ─── Flash Messages ─── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container" role="region" aria-label="Notifications">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}" role="alert">
+            <span aria-hidden="true">{% if category == 'success' %}&#9989;{% else %}&#9888;{% endif %}</span>
+            <span>{{ message }}</span>
+            <button type="button" class="flash-dismiss" aria-label="Dismiss notification">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<!-- ─── Page Content ─── -->
+<main class="main" id="main-content">
+    {% block content %}
+    {# ── Default content: the homepage. ─────────────────────────
+       Any child template that extends this file and defines its own
+       content block replaces everything below. That is why /intake
+       shows the form and /confirmation shows the tick, while opening
+       base.html directly still shows the homepage.
+       ────────────────────────────────────────────────────────── #}
+
+    <!-- ═══════════ HERO ═══════════ -->
+    <div class="hero" id="top">
+        <div class="hero-inner">
+            <span class="page-eyebrow">Digital patient intake platform</span>
+            <h1>Your next step in <em>modern patient care</em></h1>
+            <p class="lede">MyNextStepHealth gives clinics a calm, professional front door.
+               Patients describe what they need in a few guided steps — your team receives
+               structured, prioritised requests instead of a phone queue.</p>
+            <div class="hero-actions">
+                <a href="#contact" class="btn btn-white btn-lg">Talk to us</a>
+                <a href="#how-it-works" class="btn btn-hollow btn-lg">See how it works</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat"><div class="n">4 steps</div><div class="l">Guided journey</div></div>
+                <div class="hero-stat"><div class="n">No login</div><div class="l">For patients</div></div>
+                <div class="hero-stat"><div class="n">One link</div><div class="l">To deploy</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ HOW IT WORKS ═══════════ -->
+    <div class="container" id="how-it-works">
+        <h2 class="section-title">How it works</h2>
+        <p class="section-sub">No apps to install, no passwords to remember.
+           One link on the clinic website does the rest.</p>
+        <div class="grid grid-3" style="margin-top:30px">
+            <div class="card how-step">
+                <span class="how-num" aria-hidden="true">1</span>
+                <h3 style="margin-bottom:8px">Patient describes their need</h3>
+                <p style="font-size:.92rem;color:var(--gray-600)">A short guided form collects the concern,
+                   contact details, and how soon they feel they need a response.</p>
+            </div>
+            <div class="card how-step">
+                <span class="how-num" aria-hidden="true">2</span>
+                <h3 style="margin-bottom:8px">The clinic is notified instantly</h3>
+                <p style="font-size:.92rem;color:var(--gray-600)">The request arrives structured and complete —
+                   no call-backs to fill gaps, no transcription from voicemail.</p>
+            </div>
+            <div class="card how-step">
+                <span class="how-num" aria-hidden="true">3</span>
+                <h3 style="margin-bottom:8px">The team responds &amp; tracks</h3>
+                <p style="font-size:.92rem;color:var(--gray-600)">Staff triage from the dashboard, contact the
+                   patient, and mark the request complete. Clinical judgement stays with the clinic.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ FOR CLINICS ═══════════ -->
+    <div class="container" id="for-clinics" style="padding-top:10px">
+        <h2 class="section-title">For clinics</h2>
+        <p class="section-sub">Built around how healthcare teams actually work.</p>
+        <div class="grid grid-3">
+            <div class="card card-interactive">
+                <div class="feature-icon" aria-hidden="true">&#128274;</div>
+                <h3 style="margin-bottom:8px">Private by design</h3>
+                <p style="font-size:.92rem;color:var(--gray-600)">Details go to the selected clinic only.
+                   Nothing sensitive is stored in the patient's browser.</p>
+            </div>
+            <div class="card card-interactive">
+                <div class="feature-icon" aria-hidden="true">&#9855;</div>
+                <h3 style="margin-bottom:8px">Accessible to everyone</h3>
+                <p style="font-size:.92rem;color:var(--gray-600)">Keyboard navigation, screen-reader labels,
+                   visible focus states, and large touch targets throughout.</p>
+            </div>
+            <div class="card card-interactive">
+                <div class="feature-icon" aria-hidden="true">&#127973;</div>
+                <h3 style="margin-bottom:8px">Built for clinics</h3>
+                <p style="font-size:.92rem;color:var(--gray-600)">Structured categories and urgency signals
+                   help teams triage faster — while final assessment stays clinical.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ CONTACT ═══════════ -->
+    <div class="container" id="contact" style="padding-top:10px">
+        <h2 class="section-title">Contact us</h2>
+        <p class="section-sub">Questions about the platform, a demo for your clinic,
+           or anything else — we'd love to hear from you.</p>
+
+        <div class="contact-grid">
+
+            <!-- ── Details ── -->
+            <div class="card">
+                <h3 style="font-size:1.1rem;margin-bottom:4px">Reach us directly</h3>
+                <p style="font-size:.88rem;color:var(--gray-600);margin-bottom:8px">
+                    We reply to all enquiries within two working days.</p>
+
+                <div class="contact-detail">
+                    <div class="contact-icon" aria-hidden="true">&#9993;</div>
+                    <div>
+                        <h3>Email</h3>
+                        <a href="gmail.com">mynextstep@gmail.com</a>
+                    </div>
+                </div>
+
+                <div class="contact-detail">
+                    <div class="contact-icon" aria-hidden="true">&#127973;</div>
+                    <div>
+                        <h3>Clinics &amp; hospitals</h3>
+                        <p>Ask about a demo, pricing, or how deployment works for your practice.</p>
+                    </div>
+                </div>
+
+                <div class="contact-detail">
+                    <div class="contact-icon" aria-hidden="true">&#128269;</div>
+                    <div>
+                        <h3>About a request you sent</h3>
+                        <p>Please contact your clinic directly and quote your reference
+                           number — they hold your records, not us.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Form: posts to Flask, which sends the email ── -->
+            <div class="card">
+                <h3 style="font-size:1.1rem;margin-bottom:4px">Send us a message</h3>
+                <p style="font-size:.88rem;color:var(--gray-600);margin-bottom:18px">
+                    Fields marked with * are required.</p>
+
+                <form method="POST" action="/contact" novalidate id="contactForm">
+
+                    <!-- Spam trap: hidden from people, tempting to bots -->
+                    <div style="position:absolute;left:-9999px" aria-hidden="true">
+                        <label for="website">Leave this blank</label>
+                        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="cname">Your name <span class="required">*</span></label>
+                        <input class="form-control" type="text" id="cname" name="name" required
+                               autocomplete="name" placeholder="e.g. Jane Smith"
+                               value="{{ form_data.name if form_data else '' }}">
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="cemail">Your email <span class="required">*</span></label>
+                            <input class="form-control" type="email" id="cemail" name="email" required
+                                   autocomplete="email" inputmode="email" placeholder="jane@example.com"
+                                   value="{{ form_data.email if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="corg">Organisation</label>
+                            <input class="form-control" type="text" id="corg" name="organisation"
+                                   placeholder="Optional"
+                                   value="{{ form_data.organisation if form_data else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="csubject">What's this about? <span class="required">*</span></label>
+                        <select class="form-control" id="csubject" name="subject" required>
+                            <option value="" disabled {{ '' if form_data and form_data.subject else 'selected' }}>Choose an option...</option>
+                            <option value="Demo request" {{ 'selected' if form_data and form_data.subject == 'Demo request' else '' }}>Request a demo for my clinic</option>
+                            <option value="Pricing enquiry" {{ 'selected' if form_data and form_data.subject == 'Pricing enquiry' else '' }}>Pricing and deployment</option>
+                            <option value="Support" {{ 'selected' if form_data and form_data.subject == 'Support' else '' }}>Help with the platform</option>
+                            <option value="General enquiry" {{ 'selected' if form_data and form_data.subject == 'General enquiry' else '' }}>Something else</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:16px">
+                        <label class="form-label" for="cmessage">Your message <span class="required">*</span></label>
+                        <textarea class="form-control" id="cmessage" name="message" rows="5" required
+                            placeholder="Tell us how we can help. Please don't include personal medical details here."
+                        >{{ form_data.message if form_data else '' }}</textarea>
+                        <p class="char-count" id="cMsgCount">0 characters</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="cSendBtn">
+                        <span id="cSendLabel">Send message</span>
+                        <span aria-hidden="true" id="cSendArrow">&rarr;</span>
+                    </button>
+
+                    <p style="font-size:.78rem;color:var(--gray-600);margin-top:14px;line-height:1.5">
+                        We'll only use your details to reply to this enquiry.
+                        Please don't send confidential medical information through this form.</p>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="emergency" role="note" style="margin-top:22px">
+            <span class="ic" aria-hidden="true">&#9888;</span>
+            <div>
+                <strong>Not for medical emergencies</strong>
+                <p>This inbox is not monitored around the clock. If you need urgent medical
+                   help, contact your local emergency services or go to your nearest
+                   emergency department.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ CLOSING CTA ═══════════ -->
+    <div class="cta-band">
+        <h2>Ready to give your patients a clearer next step?</h2>
+        <p>We'll walk you through how MyNextStepHealth would work for your clinic —
+           your branding, your services, your team.</p>
+        <a href="mailto:mynextstep@gmail.com?subject=Demo%20request%20for%20my%20clinic" class="btn btn-primary btn-lg">Book a demo</a>
+    </div>
+
+    {% endblock %}
+</main>
+
+<!-- ─── Footer ─── -->
+<footer class="footer">
+    <strong>Powered by MyNextStepHealth</strong> &nbsp;&middot;&nbsp;
+    A modern digital patient intake platform &nbsp;&middot;&nbsp;
+    &#9888; For urgent or emergency medical concerns, please contact your local emergency services immediately.
+    <div class="footer-provider">
+        <a href="mailto:mynextstep@gmail.com">mynextstep@gmail.com</a>
+    </div>
+</footer>
+
+<script>
+(function () {
+    "use strict";
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest(".flash-dismiss");
+        if (btn) { var f = btn.closest(".flash"); if (f) f.remove(); }
+    });
+
+    /* Contact form: character counter + sending state */
+    var cForm = document.getElementById("contactForm");
+    if (cForm) {
+        var box = document.getElementById("cmessage");
+        var out = document.getElementById("cMsgCount");
+        var update = function () {
+            var n = box.value.length;
+            out.textContent = n + (n === 1 ? " character" : " characters");
+        };
+        box.addEventListener("input", update);
+        update();
+
+        cForm.addEventListener("submit", function () {
+            if (!cForm.checkValidity()) return;
+            var b = document.getElementById("cSendBtn");
+            b.disabled = true;
+            document.getElementById("cSendArrow").outerHTML =
+                '<span class="spinner" aria-hidden="true"></span>';
+            document.getElementById("cSendLabel").textContent = "Sending...";
+        });
+    }
+})();
+</script>
+
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

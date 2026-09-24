@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Message Sent — MyNextStepHealth{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Self-contained: every colour has a fallback and the buttons are
+       styled here too, so this page looks right whichever base.html
+       you're running. */
+
+    .confirm-wrap {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 60px 24px 40px;
+        text-align: center;
+    }
+
+    .confirm-icon {
+        width: 88px; height: 88px;
+        margin: 0 auto 24px;
+        border-radius: 50%;
+        background: var(--green-bg, #EAFAF1);
+        border: 2px solid var(--green-line, #A9DFBF);
+        color: var(--green, #1E8449);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.4rem;
+        line-height: 1;
+    }
+
+    .confirm-wrap h1 {
+        font-family: var(--f-head, var(--font-heading, Georgia, serif));
+        font-size: clamp(1.6rem, 4vw, 2.2rem);
+        color: var(--navy, #1B3A6B);
+        margin: 0 0 12px;
+        line-height: 1.2;
+        letter-spacing: -0.015em;
+    }
+
+    .confirm-wrap .lede {
+        color: var(--gray-600, #5A7A99);
+        font-size: 1.02rem;
+        line-height: 1.65;
+        max-width: 48ch;
+        margin: 0 auto 30px;
+    }
+
+    .confirm-next {
+        background: var(--sky, #EBF3FB);
+        border: 1px solid var(--sky-mid, #D0E4F7);
+        border-radius: 14px;
+        padding: 24px 28px;
+        text-align: left;
+        margin-bottom: 30px;
+    }
+
+    .confirm-next h2 {
+        font-family: var(--f-head, var(--font-heading, Georgia, serif));
+        font-size: 1.1rem;
+        color: var(--navy, #1B3A6B);
+        margin: 0 0 14px;
+    }
+
+    .confirm-next ol { margin: 0; padding-left: 20px; }
+
+    .confirm-next li {
+        font-size: .93rem;
+        color: var(--gray-600, #5A7A99);
+        line-height: 1.6;
+        margin-bottom: 8px;
+    }
+    .confirm-next li:last-child { margin-bottom: 0; }
+
+    .confirm-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Buttons — defined locally so the page never renders unstyled */
+    .confirm-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 13px 26px;
+        min-height: 47px;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: .95rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all .2s cubic-bezier(.4,0,.2,1);
+    }
+    .confirm-actions .btn-primary {
+        background: var(--navy, #1B3A6B);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(27,58,107,.22);
+    }
+    .confirm-actions .btn-primary:hover {
+        background: var(--navy-light, #2a4f8a);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(27,58,107,.28);
+    }
+    .confirm-actions .btn-outline {
+        background: #fff;
+        color: var(--navy, #1B3A6B);
+        border-color: var(--navy, #1B3A6B);
+    }
+    .confirm-actions .btn-outline:hover {
+        background: var(--sky, #EBF3FB);
+        transform: translateY(-1px);
+    }
+
+    .confirm-footnote {
+        font-size: .82rem;
+        color: var(--gray-600, #5A7A99);
+        margin-top: 28px;
+        line-height: 1.55;
+        max-width: 52ch;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    @media (max-width: 560px) {
+        .confirm-wrap { padding: 40px 16px 24px; }
+        .confirm-next { padding: 20px; }
+        .confirm-actions .btn { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .confirm-actions .btn { transition: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirm-wrap">
+
+    <div class="confirm-icon" aria-hidden="true">&#10004;</div>
+
+    <h1>Your message has been sent</h1>
+
+    <p class="lede">
+        Thanks{% if name %}, {{ name }}{% endif %} — we've received your enquiry
+        and it's landed in our inbox. We'll get back to you by email.
+    </p>
+
+    <div class="confirm-next">
+        <h2>What happens next</h2>
+        <ol>
+            <li>A member of the team reads your message.</li>
+            <li>We reply to the email address you gave us, usually within two working days.</li>
+            <li>If you asked for a demo, we'll suggest a few times that might suit you.</li>
+        </ol>
+    </div>
+
+    <div class="confirm-actions">
+        <a href="{{ url_for('index') }}" class="btn btn-outline">Back to home</a>
+        <a href="{{ url_for('contact') }}" class="btn btn-primary">Send another message</a>
+    </div>
+
+    <p class="confirm-footnote">
+        Need urgent medical help? This inbox is not monitored around the clock —
+        contact your local emergency services or go to your nearest emergency department.
+    </p>
+
+</div>
+{% endblock %}

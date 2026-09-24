@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Submission Confirmed — MyNextStepHealth{% endblock %}
+
+{% block extra_head %}
+<style>
+    .confirmation-wrapper {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+    }
+
+    .confirmation-card {
+        background: white;
+        border-radius: var(--radius-lg, 22px);
+        box-shadow: var(--shadow-lg, 0 16px 48px rgba(27,58,107,.16));
+        padding: 56px 48px;
+        text-align: center;
+        max-width: 560px;
+        width: 100%;
+        border: 1px solid var(--sky-mid, #D0E4F7);
+        animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(0.94) translateY(16px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .success-ring {
+        width: 88px;
+        height: 88px;
+        background: linear-gradient(135deg, #eafaf1, #d5f5e3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 2.4rem;
+        border: 3px solid #a9dfbf;
+    }
+
+    .confirmation-card h1 {
+        font-family: var(--font-heading, var(--f-head, Georgia, serif));
+        font-size: 2rem;
+        color: var(--navy, #1B3A6B);
+        margin-bottom: 10px;
+    }
+
+    .confirmation-card .subtitle {
+        color: var(--gray-600, #5A7A99);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 32px;
+    }
+
+    .confirmation-card .patient-name {
+        color: var(--blue, #3A7BD5);
+        font-style: italic;
+    }
+
+    .confirmation-card .clinic-name {
+        color: var(--navy, #1B3A6B);
+        font-weight: 700;
+    }
+
+    .next-steps {
+        background: var(--sky, #EBF3FB);
+        border-radius: var(--radius-md, 14px);
+        padding: 20px 24px;
+        margin-bottom: 28px;
+        text-align: left;
+    }
+
+    .next-steps h3 {
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--navy, #1B3A6B);
+        margin-bottom: 12px;
+    }
+
+    .next-steps ul { list-style: none; margin: 0; padding: 0; }
+    .next-steps li {
+        font-size: 0.88rem;
+        color: var(--gray-600, #5A7A99);
+        padding: 5px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .confirmation-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Buttons defined locally so this page never renders unstyled */
+    .confirmation-actions .btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 8px; padding: 13px 26px; min-height: 47px;
+        border-radius: var(--r-pill, 999px);
+        font-family: inherit; font-size: .95rem; font-weight: 600;
+        text-decoration: none; border: 2px solid transparent;
+        cursor: pointer; transition: all .2s cubic-bezier(.4,0,.2,1);
+    }
+    .confirmation-actions .btn-outline {
+        background: #fff; color: var(--navy, #1B3A6B);
+        border-color: var(--navy, #1B3A6B);
+    }
+    .confirmation-actions .btn-outline:hover {
+        background: var(--sky, #EBF3FB); transform: translateY(-1px);
+    }
+    .confirmation-actions .btn-primary {
+        background: var(--navy, #1B3A6B); color: #fff;
+        box-shadow: 0 2px 8px rgba(27,58,107,.22);
+    }
+    .confirmation-actions .btn-primary:hover {
+        background: var(--navy-light, #2a4f8a); transform: translateY(-1px);
+    }
+
+    @media (max-width: 560px) {
+        .confirmation-card { padding: 36px 24px; }
+        .confirmation-actions .btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .confirmation-card { animation: none; }
+        .confirmation-actions .btn { transition: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirmation-wrapper">
+    <div class="confirmation-card">
+        <div class="success-ring">✅</div>
+
+        <h1>You're all set!</h1>
+        <p class="subtitle">
+            Thank you, <span class="patient-name">{{ name }}</span>. Your intake form has been
+            submitted successfully.
+            {% if clinic_display %}
+                <span class="clinic-name">{{ clinic_display }}</span> has been notified
+                and will be in touch shortly.
+            {% else %}
+                The clinic has been notified and will be in touch shortly.
+            {% endif %}
+        </p>
+
+        <div class="next-steps">
+            <h3>What happens now</h3>
+            <ul>
+                <li>📧 The clinic received an email with your submission details</li>
+                <li>📞 A staff member will contact you to confirm your appointment</li>
+                <li>🗂️ Your case has been logged with "New" status in the system</li>
+            </ul>
+        </div>
+
+        <p style="font-size:0.8rem; color:var(--gray-400,#9DB4CC); margin-bottom:24px;">
+            ⚠️ For urgent or emergency medical concerns, please contact your local emergency services immediately.
+        </p>
+
+        <div class="confirmation-actions">
+            {# BUG FIX: carry the clinic through, so a second request goes to
+               the same practice instead of showing every clinic again. #}
+            <a href="{{ url_for('intake', clinic=clinic_slug) if clinic_slug else url_for('intake') }}"
+               class="btn btn-outline">Submit Another</a>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home →</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
