@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Intake Form — MyNextStepHealth{% endblock %}
+
+{% block extra_head %}
+<style>
+    .intake-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 32px;
+        align-items: start;
+    }
+
+    .intake-form-card {
+        background: white;
+        border: 1px solid var(--sky-mid);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .form-section-header {
+        background: var(--sky);
+        border-bottom: 1px solid var(--sky-mid);
+        padding: 18px 28px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-section-header span { font-weight: 700; font-size: 0.88rem; color: var(--navy); }
+
+    .form-section-icon {
+        width: 28px; height: 28px;
+        background: var(--navy);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .form-body { padding: 28px; }
+
+    .form-divider {
+        border: none;
+        border-top: 1px solid var(--sky-mid);
+        margin: 24px 0;
+    }
+
+    /* Urgency selector */
+    .urgency-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+    .urgency-option { display: none; }
+
+    .urgency-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 10px;
+        border: 2px solid var(--sky-mid);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: var(--transition);
+        text-align: center;
+    }
+
+    .urgency-label .icon { font-size: 1.5rem; }
+    .urgency-label .label-text { font-size: 0.82rem; font-weight: 600; color: var(--gray-600); }
+
+    .urgency-option:checked + .urgency-label { border-width: 2px; background: var(--sky); }
+
+    #urgency-low:checked + .urgency-label    { border-color: var(--green);  background: #eafaf1; }
+    #urgency-medium:checked + .urgency-label { border-color: var(--orange); background: #fff7e6; }
+    #urgency-high:checked + .urgency-label   { border-color: var(--red);    background: #fef0f0; }
+
+    .urgency-label:hover { border-color: var(--blue-soft); background: var(--sky); }
+
+    /* Disclaimer */
+    .disclaimer {
+        background: #fff8e1;
+        border: 1.5px solid #ffe082;
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        margin-top: 24px;
+    }
+
+    .disclaimer-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .disclaimer-text { font-size: 0.83rem; color: #795548; line-height: 1.5; }
+
+    /* Submit button */
+    .submit-btn {
+        width: 100%;
+        padding: 15px;
+        background: var(--navy);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-family: var(--font-body);
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .submit-btn:hover { background: var(--navy-light); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .submit-btn:active { transform: translateY(0); }
+
+    /* Sidebar */
+    .sidebar-card {
+        background: white;
+        border: 1px solid var(--sky-mid);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .sidebar-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--navy); margin-bottom: 14px; }
+
+    .info-list { list-style: none; }
+    .info-list li {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--sky-mid);
+        font-size: 0.88rem;
+        color: var(--gray-600);
+    }
+    .info-list li:last-child { border-bottom: none; }
+    .info-list li .icon { flex-shrink: 0; }
+
+    .privacy-note {
+        background: var(--sky);
+        border-radius: var(--radius-sm);
+        padding: 14px;
+        font-size: 0.82rem;
+        color: var(--gray-600);
+        line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+        .intake-layout { grid-template-columns: 1fr; }
+        .intake-sidebar { order: -1; }
+    }
+
+    @media (max-width: 576px) {
+        .form-body { padding: 20px; }
+        .form-section-header { padding: 14px 20px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-inner">
+        <h1>Patient Intake Form</h1>
+        <p>Complete the form below to begin your care journey. All fields marked with * are required.</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="intake-layout">
+
+        <!-- ─── Main Form ─── -->
+        <div>
+            <form method="POST" action="{{ url_for('intake') }}" id="intakeForm">
+
+                <!-- SECTION 1: Clinic -->
+                <div class="intake-form-card" style="margin-bottom:20px;">
+                    <div class="form-section-header">
+                        <div class="form-section-icon">🏥</div>
+                        <span>Clinic Information</span>
+                    </div>
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label class="form-label" for="clinic_name">
+                                Clinic Name <span class="required">*</span>
+                            </label>
+                            <select class="form-control" id="clinic_name" name="clinic_name" required>
+    <option value="" disabled selected>Select your clinic...</option>
+
+    <option value="bowes-road-dental">
+        Bowes Road Dental Practice
+    </option>
+
+    <option value="medi-family">
+        Medi Family Clinic
+                                </option>
+                       </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Personal Details -->
+                <div class="intake-form-card" style="margin-bottom:20px;">
+                    <div class="form-section-header">
+                        <div class="form-section-icon">👤</div>
+                        <span>Personal Details</span>
+                    </div>
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label class="form-label" for="full_name">
+                                Full Name <span class="required">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="full_name"
+                                name="full_name"
+                                placeholder="e.g. Jane Smith"
+                                required
+                            />
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="email">
+                                    Email Address <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    class="form-control"
+                                    id="email"
+                                    name="email"
+                                    placeholder="jane@example.com"
+                                    required
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="phone">
+                                    Phone Number <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="tel"
+                                    class="form-control"
+                                    id="phone"
+                                    name="phone"
+                                    placeholder="+44 7700 000000"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Medical Information -->
+                <div class="intake-form-card">
+                    <div class="form-section-header">
+                        <div class="form-section-icon">🩺</div>
+                        <span>Medical Information</span>
+                    </div>
+                    <div class="form-body">
+
+                        <div class="form-group">
+                            <label class="form-label" for="concern">
+                                Medical Concern / Symptoms <span class="required">*</span>
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="concern"
+                                name="concern"
+                                placeholder="Please describe your symptoms or the reason for your visit in as much detail as possible..."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Urgency Level <span class="required">*</span>
+                            </label>
+                            <div class="urgency-selector">
+                                <div>
+                                    <input type="radio" class="urgency-option" id="urgency-low" name="urgency" value="Low" required />
+                                    <label class="urgency-label" for="urgency-low">
+                                        <span class="icon">🟢</span>
+                                        <span class="label-text">Low</span>
+                                        <span style="font-size:0.72rem; color:var(--gray-400);">Not urgent</span>
+                                    </label>
+                                </div>
+                                <div>
+                                    <input type="radio" class="urgency-option" id="urgency-medium" name="urgency" value="Medium" />
+                                    <label class="urgency-label" for="urgency-medium">
+                                        <span class="icon">🟡</span>
+                                        <span class="label-text">Medium</span>
+                                        <span style="font-size:0.72rem; color:var(--gray-400);">Needs attention</span>
+                                    </label>
+                                </div>
+                                <div>
+                                    <input type="radio" class="urgency-option" id="urgency-high" name="urgency" value="High" />
+                                    <label class="urgency-label" for="urgency-high">
+                                        <span class="icon">🔴</span>
+                                        <span class="label-text">High</span>
+                                        <span style="font-size:0.72rem; color:var(--gray-400);">Urgent matter</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="form-divider" />
+
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" for="notes">
+                                Additional Notes
+                                <span style="color:var(--gray-400); font-weight:400;">(optional)</span>
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="notes"
+                                name="notes"
+                                placeholder="Any allergies, current medications, or other information you'd like to share..."
+                                style="min-height:85px;"
+                            ></textarea>
+                        </div>
+
+                        <!-- Disclaimer -->
+                        <div class="disclaimer">
+                            <span class="disclaimer-icon">⚠️</span>
+                            <p class="disclaimer-text">
+                                <strong>Important:</strong>
+                                If you are experiencing a medical emergency, please call your local emergency services immediately.
+                            </p>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <span>Submit Intake Form</span>
+                            <span>→</span>
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- ─── Sidebar ─── -->
+        <div class="intake-sidebar">
+            <div class="sidebar-card">
+                <h3>What happens next?</h3>
+                <ul class="info-list">
+                    <li><span class="icon">📨</span> Your details are sent securely to the clinic</li>
+                    <li><span class="icon">📬</span> The clinic receives an instant email notification</li>
+                    <li><span class="icon">📞</span> A member of staff will contact you to confirm your appointment</li>
+                    <li><span class="icon">🗂️</span> Your case is tracked through our provider dashboard</li>
+                </ul>
+            </div>
+
+            <div class="sidebar-card">
+                <h3>Before you submit</h3>
+                <ul class="info-list">
+                    <li><span class="icon">✅</span> Check your email address is correct</li>
+                    <li><span class="icon">✅</span> Describe your symptoms as clearly as possible</li>
+                    <li><span class="icon">✅</span> Include any relevant medical history in notes</li>
+                </ul>
+            </div>
+
+            <div class="privacy-note">
+                🔒 Your information is stored securely and used only by your selected clinic to manage your care.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Show a spinner on the submit button when the form is submitted
+    document.getElementById('intakeForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<span>Submitting...</span>';
+        btn.disabled = true;
+        btn.style.opacity = '0.8';
+    });
+</script>
+
+{% endblock %}

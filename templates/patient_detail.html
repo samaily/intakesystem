@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}{{ patient['full_name'] }} — MyNextStepHealth{% endblock %}
+
+{% block extra_head %}
+<style>
+    .detail-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 28px;
+        align-items: start;
+    }
+
+    .detail-card {
+        background: white;
+        border: 1px solid var(--sky-mid);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .detail-section-head {
+        background: var(--sky);
+        border-bottom: 1px solid var(--sky-mid);
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .detail-section-head span { font-weight: 700; font-size: 0.88rem; color: var(--navy); }
+
+    .detail-body { padding: 24px; }
+
+    .detail-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--sky-mid);
+    }
+
+    .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .detail-key {
+        width: 160px;
+        flex-shrink: 0;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding-top: 2px;
+    }
+
+    .detail-val {
+        flex: 1;
+        font-size: 0.93rem;
+        color: var(--gray-800);
+        line-height: 1.6;
+    }
+
+    .detail-val a { color: var(--blue); text-decoration: none; }
+    .detail-val a:hover { text-decoration: underline; }
+
+    /* Concern box */
+    .concern-box {
+        background: var(--sky);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        font-size: 0.93rem;
+        color: var(--gray-800);
+        line-height: 1.7;
+    }
+
+    /* Status panel */
+    .status-panel {
+        background: white;
+        border: 1px solid var(--sky-mid);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        position: sticky;
+        top: 90px;
+    }
+
+    .status-panel-head {
+        background: var(--navy);
+        padding: 14px 20px;
+        color: white;
+        font-weight: 700;
+        font-size: 0.88rem;
+    }
+
+    .status-panel-body { padding: 20px; }
+
+    .current-status-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--gray-600);
+        margin-bottom: 10px;
+    }
+
+    .current-status-badge {
+        margin-bottom: 20px;
+    }
+
+    .status-form-stack { display: flex; flex-direction: column; gap: 10px; }
+
+    .status-select-full {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--sky-mid);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        color: var(--gray-800);
+        background: white;
+        cursor: pointer;
+        outline: none;
+        transition: var(--transition);
+    }
+
+    .status-select-full:focus { border-color: var(--blue); }
+
+    .update-btn-full {
+        width: 100%;
+        padding: 11px;
+        background: var(--navy);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .update-btn-full:hover { background: var(--navy-light); }
+
+    .meta-list { list-style: none; margin-top: 20px; border-top: 1px solid var(--sky-mid); padding-top: 16px; }
+    .meta-list li { font-size: 0.82rem; color: var(--gray-600); padding: 5px 0; display: flex; justify-content: space-between; }
+    .meta-list li strong { color: var(--gray-800); }
+
+    @media (max-width: 900px) {
+        .detail-layout { grid-template-columns: 1fr; }
+        .status-panel { position: static; }
+    }
+
+    @media (max-width: 576px) {
+        .detail-key { width: 110px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-inner">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+            <a href="{{ url_for('dashboard') }}" style="color:rgba(255,255,255,0.6); text-decoration:none; font-size:0.88rem;">← Dashboard</a>
+            <span style="color:rgba(255,255,255,0.3);">/</span>
+            <span style="color:rgba(255,255,255,0.8); font-size:0.88rem;">Patient Detail</span>
+        </div>
+        <h1>{{ patient['full_name'] }}</h1>
+        <p>Intake #{{ patient['id'] }} &nbsp;·&nbsp; Submitted {{ patient['submitted_at'] }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="detail-layout">
+
+        <!-- ─── Left: Patient Info ─── -->
+        <div>
+
+            <!-- Contact Details -->
+            <div class="detail-card">
+                <div class="detail-section-head">
+                    <span>👤 Personal Details</span>
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <div class="detail-key">Full Name</div>
+                        <div class="detail-val"><strong>{{ patient['full_name'] }}</strong></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-key">Email</div>
+                        <div class="detail-val"><a href="mailto:{{ patient['email'] }}">{{ patient['email'] }}</a></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-key">Phone</div>
+                        <div class="detail-val"><a href="tel:{{ patient['phone'] }}">{{ patient['phone'] }}</a></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-key">Clinic</div>
+                        <div class="detail-val">{{ patient['clinic_name'] }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Details -->
+            <div class="detail-card">
+                <div class="detail-section-head">
+                    <span>🩺 Medical Information</span>
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <div class="detail-key">Urgency</div>
+                        <div class="detail-val">
+                            {% if patient['urgency'] == 'High' %}
+                                <span class="badge badge-high" style="font-size:0.88rem; padding:6px 14px;">🔴 High</span>
+                            {% elif patient['urgency'] == 'Medium' %}
+                                <span class="badge badge-medium" style="font-size:0.88rem; padding:6px 14px;">🟡 Medium</span>
+                            {% else %}
+                                <span class="badge badge-low" style="font-size:0.88rem; padding:6px 14px;">🟢 Low</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-key">Concern</div>
+                        <div class="detail-val">
+                            <div class="concern-box">{{ patient['concern'] }}</div>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-key">Notes</div>
+                        <div class="detail-val">
+                            {% if patient['notes'] %}
+                                {{ patient['notes'] }}
+                            {% else %}
+                                <em style="color:var(--gray-400);">No additional notes provided</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ─── Right: Status Panel ─── -->
+        <div>
+            <div class="status-panel">
+                <div class="status-panel-head">🗂️ Case Management</div>
+                <div class="status-panel-body">
+
+                    <div class="current-status-label">Current Status</div>
+                    <div class="current-status-badge">
+                        {% if patient['status'] == 'New' %}
+                            <span class="badge badge-new" style="font-size:0.9rem; padding:7px 16px;">🆕 New</span>
+                        {% elif patient['status'] == 'In Progress' %}
+                            <span class="badge badge-in-progress" style="font-size:0.9rem; padding:7px 16px;">⏳ In Progress</span>
+                        {% else %}
+                            <span class="badge badge-complete" style="font-size:0.9rem; padding:7px 16px;">✅ Complete</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Update Status Form -->
+                    <form method="POST" action="{{ url_for('update_status', patient_id=patient['id']) }}" class="status-form-stack">
+                        <input type="hidden" name="referrer" value="detail" />
+                        <select name="status" class="status-select-full">
+                            <option {% if patient['status']=='New' %}selected{% endif %}>New</option>
+                            <option {% if patient['status']=='In Progress' %}selected{% endif %}>In Progress</option>
+                            <option {% if patient['status']=='Complete' %}selected{% endif %}>Complete</option>
+                        </select>
+                        <button type="submit" class="update-btn-full">Update Status</button>
+                    </form>
+
+                    <ul class="meta-list">
+                        <li><span>Intake ID</span><strong>#{{ patient['id'] }}</strong></li>
+                        <li><span>Submitted</span><strong>{{ patient['submitted_at'][:10] }}</strong></li>
+                        <li><span>Time</span><strong>{{ patient['submitted_at'][11:] }}</strong></li>
+                        <li><span>Clinic</span><strong>{{ patient['clinic_name'] }}</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="width:100%; justify-content:center; margin-top:16px;">
+                ← Back to Dashboard
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyNextStep Health — Care navigation and support</title>
+<meta name="description" content="MyNextStep Health helps people and families work out the next stage of care — after a hospital stay, a diagnosis, or a treatment programme.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14332B;
+    --ink-soft:#4A6560;
+    --paper:#FBFBF8;
+    --field:#E7EDE6;
+    --moss:#3D7A5E;
+    --sun:#D9A03C;
+    --line:#CBD8CE;
+    --white:#FFFFFF;
+
+    --display:"Fraunces", Georgia, serif;
+    --body:"Karla", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:17px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 26px}
+  a{color:inherit}
+  :focus-visible{outline:3px solid var(--moss);outline-offset:3px}
+
+  .btn{
+    display:inline-block;text-decoration:none;font-weight:600;font-size:16px;
+    padding:14px 26px;border-radius:2px;transition:background .15s ease,color .15s ease;
+  }
+  .btn-solid{background:var(--ink);color:var(--paper)}
+  .btn-solid:hover{background:var(--moss)}
+  .btn-quiet{border:1.5px solid var(--ink);color:var(--ink)}
+  .btn-quiet:hover{background:var(--ink);color:var(--paper)}
+
+  /* ---------- Header ---------- */
+  .topbar{
+    background:var(--ink);color:var(--field);
+    font-size:14.5px;letter-spacing:.01em;
+  }
+  .topbar-inner{
+    max-width:1080px;margin:0 auto;padding:9px 26px;
+    display:flex;flex-wrap:wrap;gap:6px 22px;justify-content:space-between;align-items:center;
+  }
+  .topbar a{text-decoration:none;border-bottom:1px solid rgba(231,237,230,.4)}
+  .topbar a:hover{border-bottom-color:var(--sun);color:var(--white)}
+
+  header.site{
+    background:var(--paper);border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:20;
+  }
+  .head-inner{
+    max-width:1080px;margin:0 auto;padding:20px 26px;
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
+  }
+  .brand{display:flex;align-items:center;gap:13px;text-decoration:none}
+  .brand-mark{
+    width:36px;height:36px;flex:none;position:relative;
+  }
+  .brand-mark i{
+    position:absolute;left:0;background:var(--moss);border-radius:1px;display:block;
+  }
+  .brand-mark i:nth-child(1){bottom:0;width:36px;height:10px;background:var(--ink)}
+  .brand-mark i:nth-child(2){bottom:13px;width:26px;height:10px;background:var(--moss)}
+  .brand-mark i:nth-child(3){bottom:26px;width:16px;height:10px;background:var(--sun)}
+  .brand-name{
+    font-family:var(--display);font-size:23px;font-weight:600;letter-spacing:-.01em;line-height:1;
+  }
+  .brand-name span{color:var(--moss)}
+
+  nav.site{display:flex;gap:28px;align-items:center;font-size:16px;font-weight:500}
+  nav.site a{text-decoration:none;padding-bottom:2px;border-bottom:2px solid transparent}
+  nav.site a:hover{border-bottom-color:var(--sun)}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:88px 0 72px}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:60px;align-items:center}
+  .eyebrow{
+    font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--moss);margin-bottom:20px;
+  }
+  h1{
+    font-family:var(--display);font-weight:500;
+    font-size:clamp(40px,5.4vw,62px);line-height:1.06;letter-spacing:-.02em;
+  }
+  h1 em{font-style:italic;color:var(--moss)}
+  .hero p.lede{margin-top:24px;font-size:19px;color:var(--ink-soft);max-width:44ch}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:34px}
+
+  /* Stair graphic — the signature */
+  .stair{display:flex;flex-direction:column;gap:12px;align-items:flex-end}
+  .stair-step{
+    background:var(--white);border:1px solid var(--line);border-left:5px solid var(--moss);
+    padding:16px 20px;width:100%;
+  }
+  .stair-step:nth-child(1){margin-right:0;border-left-color:var(--line)}
+  .stair-step:nth-child(2){width:92%;border-left-color:var(--field)}
+  .stair-step:nth-child(3){width:84%;border-left-color:var(--moss)}
+  .stair-step:nth-child(4){width:76%;border-left-color:var(--sun);background:var(--field)}
+  .stair-label{font-size:12.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft)}
+  .stair-text{font-family:var(--display);font-size:20px;font-weight:500;margin-top:3px}
+
+  /* ---------- Sections ---------- */
+  .section{padding:82px 0}
+  .section-alt{background:var(--field)}
+  .kicker{
+    font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--moss);margin-bottom:14px;
+  }
+  h2{
+    font-family:var(--display);font-weight:500;font-size:clamp(30px,3.6vw,42px);
+    line-height:1.14;letter-spacing:-.015em;max-width:20ch;
+  }
+  .section-intro{margin-top:16px;max-width:52ch;color:var(--ink-soft);font-size:18px}
+
+  .services{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:46px}
+  .service{
+    background:var(--white);border:1px solid var(--line);padding:32px 28px 30px;
+    border-top:4px solid var(--moss);
+  }
+  .service h3{font-family:var(--display);font-size:24px;font-weight:600;margin-bottom:10px}
+  .service p{color:var(--ink-soft);font-size:16px}
+
+  /* Steps */
+  .steps{margin-top:48px;border-top:1px solid var(--line)}
+  .step{
+    display:grid;grid-template-columns:88px 1fr 1.15fr;gap:30px;align-items:start;
+    padding:30px 0;border-bottom:1px solid var(--line);
+  }
+  .step-num{
+    font-family:var(--display);font-size:44px;font-weight:400;line-height:.9;color:var(--sun);
+  }
+  .step h3{font-family:var(--display);font-size:25px;font-weight:600;line-height:1.2}
+  .step p{color:var(--ink-soft);font-size:16.5px}
+
+  /* Who it's for */
+  .who{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;margin-top:10px}
+  .who-list{list-style:none;display:flex;flex-direction:column;gap:16px;margin-top:8px}
+  .who-list li{
+    padding-left:34px;position:relative;font-size:17px;
+    padding-bottom:16px;border-bottom:1px solid var(--line);
+  }
+  .who-list li:last-child{border-bottom:0}
+  .who-list li::before{
+    content:"";position:absolute;left:0;top:9px;width:18px;height:2px;background:var(--sun);
+  }
+  .quote{
+    background:var(--ink);color:var(--field);padding:38px 34px;
+  }
+  .quote p{font-family:var(--display);font-size:22px;line-height:1.4;font-weight:400}
+  .quote cite{
+    display:block;margin-top:20px;font-family:var(--body);font-style:normal;
+    font-size:14px;letter-spacing:.09em;text-transform:uppercase;color:#9DBAA9;
+  }
+
+  /* ---------- Contact ---------- */
+  .contact{background:var(--ink);color:var(--paper);padding:84px 0}
+  .contact h2{color:var(--paper);max-width:22ch}
+  .contact .kicker{color:var(--sun)}
+  .contact p.lede{margin-top:18px;max-width:50ch;color:#B9CFC2;font-size:18px}
+  .mailbox{
+    margin-top:36px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);
+    padding:30px 32px;display:flex;flex-wrap:wrap;gap:22px;align-items:center;justify-content:space-between;
+  }
+  .mail-label{font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#9DBAA9}
+  .mail-addr{
+    font-family:var(--display);font-size:clamp(22px,3.4vw,32px);font-weight:500;
+    text-decoration:none;display:block;margin-top:6px;word-break:break-word;
+  }
+  .mail-addr:hover{color:var(--sun)}
+  .btn-sun{background:var(--sun);color:var(--ink)}
+  .btn-sun:hover{background:var(--paper)}
+  .contact-note{margin-top:20px;font-size:15px;color:#9DBAA9}
+
+  /* ---------- Footer ---------- */
+  footer.site{background:#0E241E;color:#9DBAA9;padding:46px 0 32px;font-size:15px}
+  .foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:36px}
+  .foot-grid h4{
+    font-family:var(--body);font-size:13px;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--field);margin-bottom:14px;font-weight:600;
+  }
+  .foot-grid a{display:block;text-decoration:none;padding:4px 0}
+  .foot-grid a:hover{color:var(--white)}
+  .foot-brand{font-family:var(--display);font-size:22px;color:var(--field);margin-bottom:10px}
+  .foot-base{
+    margin-top:36px;padding-top:20px;border-top:1px solid rgba(255,255,255,.14);
+    font-size:13px;display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:space-between;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:1fr;gap:44px}
+    .stair{align-items:stretch}
+    .stair-step:nth-child(2),.stair-step:nth-child(3),.stair-step:nth-child(4){width:100%}
+    .services{grid-template-columns:1fr}
+    .who{grid-template-columns:1fr;gap:38px}
+    .step{grid-template-columns:60px 1fr;gap:20px}
+    .step p{grid-column:2}
+    .foot-grid{grid-template-columns:1fr 1fr}
+    nav.site{display:none}
+  }
+  @media (max-width:600px){
+    .hero{padding:56px 0 44px}
+    .section,.contact{padding:56px 0}
+    .mailbox{padding:24px 22px}
+    .foot-grid{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span>Care navigation and support for people and families</span>
+    <span>Email <a href="mailto:mynextstephealth@gmail.com">mynextstephealth@gmail.com</a></span>
+  </div>
+</div>
+
+<header class="site">
+  <div class="head-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="brand-name">MyNextStep <span>Health</span></span>
+    </a>
+    <nav class="site" aria-label="Main">
+      <a href="#services">Services</a>
+      <a href="#how">How it works</a>
+      <a href="#who">Who we help</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="btn btn-solid" href="mailto:mynextstephealth@gmail.com">Email us</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero wrap">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Care navigation</p>
+        <h1>You know something has to change. <em>We help you work out what's next.</em></h1>
+        <p class="lede">MyNextStep Health guides people and families through the stretch after a hospital stay, a new diagnosis, or a treatment programme — the part where the appointments end and nobody tells you what to do on Monday.</p>
+        <div class="hero-actions">
+          <a class="btn btn-solid" href="mailto:mynextstephealth@gmail.com">Email us about your situation</a>
+          <a class="btn btn-quiet" href="#how">See how it works</a>
+        </div>
+      </div>
+
+      <div class="stair" aria-label="The path from crisis to steady ground">
+        <div class="stair-step">
+          <span class="stair-label">Where people start</span>
+          <span class="stair-text">A pile of discharge papers</span>
+        </div>
+        <div class="stair-step">
+          <span class="stair-label">First</span>
+          <span class="stair-text">One clear picture</span>
+        </div>
+        <div class="stair-step">
+          <span class="stair-label">Then</span>
+          <span class="stair-text">The right services, lined up</span>
+        </div>
+        <div class="stair-step">
+          <span class="stair-label">Where it leads</span>
+          <span class="stair-text">A plan you can hold</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="services">
+    <div class="wrap">
+      <p class="kicker">What we do</p>
+      <h2>Support that picks up where the system drops off.</h2>
+      <p class="section-intro">We're not a clinic and we don't replace your doctor. We're the people who sit with you, read the paperwork, and make the calls you've been putting off.</p>
+
+      <div class="services">
+        <article class="service">
+          <h3>Care planning</h3>
+          <p>We take everything you've been handed — diagnoses, referrals, medication lists — and turn it into one plan written in plain language, with the next three things clearly marked.</p>
+        </article>
+        <article class="service">
+          <h3>Finding the right services</h3>
+          <p>Home care, therapy, rehab, community programmes, benefits. We know what exists locally, what the waiting lists actually look like, and which options are worth your time.</p>
+        </article>
+        <article class="service">
+          <h3>Family support</h3>
+          <p>Caregiving falls hardest on whoever picks up the phone first. We help families divide the work, talk about the hard parts, and stop running on adrenaline.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="wrap">
+      <p class="kicker">How it works</p>
+      <h2>Four steps, in order, at your pace.</h2>
+
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <h3>You email us</h3>
+          <p>Write as much or as little as you want. A few lines about what's happened is enough to start. We reply within two business days.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <h3>We talk it through</h3>
+          <p>A conversation by phone or video, usually about an hour. You describe the situation; we ask the questions that tend to get missed.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <h3>You get a written plan</h3>
+          <p>Your options laid out, what each one involves, what it costs, and who to contact — with the steps ordered so you're never guessing which comes first.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">4</span>
+          <h3>We stay reachable</h3>
+          <p>Plans meet reality and change. Check in when something shifts, and we'll adjust the next step rather than starting over.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="who">
+    <div class="wrap">
+      <p class="kicker">Who we help</p>
+      <div class="who">
+        <div>
+          <h2>Most people reach us at one of these moments.</h2>
+          <ul class="who-list">
+            <li>An older parent has come home from hospital and can't manage alone yet.</li>
+            <li>A diagnosis just landed and the follow-up appointment is weeks away.</li>
+            <li>Someone finished a treatment programme and needs the next stage in place.</li>
+            <li>A family is arguing about care because nobody has the full picture.</li>
+            <li>You're the one holding it all together and you're running out of road.</li>
+          </ul>
+        </div>
+        <blockquote class="quote">
+          <p>“We had six phone numbers and no idea which to ring first. What we needed wasn't more information. It was someone to put it in order.”</p>
+          <cite>A family we worked with</cite>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <p class="kicker">Get in touch</p>
+      <h2>Tell us where you are and we'll tell you what's possible.</h2>
+      <p class="lede">There's no form to fill in. Send an email describing the situation in your own words — that's a better starting point than any set of boxes.</p>
+
+      <div class="mailbox">
+        <div>
+          <span class="mail-label">Email</span>
+          <a class="mail-addr" href="mailto:mynextstephealth@gmail.com">mynextstephealth@gmail.com</a>
+        </div>
+        <a class="btn btn-sun" href="mailto:mynextstephealth@gmail.com?subject=Support%20enquiry">Open your email app</a>
+      </div>
+
+      <p class="contact-note">We reply within two business days. If someone is in immediate danger, call emergency services instead.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <p class="foot-brand">MyNextStep Health</p>
+        <p>Care navigation and family support. We help people find the next stage of care and get to it.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <a href="#services">Services</a>
+        <a href="#how">How it works</a>
+        <a href="#who">Who we help</a>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <a href="mailto:mynextstephealth@gmail.com">mynextstephealth@gmail.com</a>
+        <a href="#contact">Response time</a>
+      </div>
+    </div>
+    <div class="foot-base">
+      <span>© 2026 MyNextStep Health</span>
+      <span>Not a substitute for medical advice or emergency care.</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

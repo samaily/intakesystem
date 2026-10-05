@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#16324f">
+<title>Patient Intake — MyNextStepHealth</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     PATIENT INTAKE — self-contained Flask template.
+     Deliberately does NOT extend base.html: this page is the
+     product, reached from a clinic's own website, so it carries
+     its own styling and has no site navigation.
+
+     The clinic dropdown is built from the database, filtered by
+     the ?org= or ?clinic= parameter in the banner link.
+     ============================================================ -->
+<style>
+/* ============ PART 1 — shared design system (from base.html) ============ */
+
+/* ============================================================
+   MyNextStepHealth — shared design system
+   Every page inherits this. Define tokens and component classes
+   HERE, not in individual page templates, so the SaaS stays
+   visually consistent as it grows.
+   ============================================================ */
+
+/* ---------- 1. Tokens ---------- */
+:root {
+    /* Brand */
+    --navy:        #16324f;
+    --navy-light:  #24466b;
+    --navy-deep:   #0e2338;
+    --blue-soft:   #5b8db8;
+
+    /* Surfaces */
+    --sky:      #f0f6fa;
+    --sky-mid:  #d8e6ee;
+    --canvas:   #f7fafc;
+    --surface:  #ffffff;
+
+    /* Text */
+    --gray-800: #22333f;
+    --gray-600: #51626e;
+    --gray-400: #8aa0ad;
+
+    /* Status */
+    --green:  #1e8e5a;  --green-bg:  #ecf9f2;  --green-line:  #b6e3cd;
+    --orange: #c9700f;  --orange-bg: #fff6e8;  --orange-line: #f4dfa0;
+    --red:    #c0392b;  --red-bg:    #fdf0ef;  --red-line:    #f0c4c0;
+    --info-bg: #f0f6fa;
+
+    /* Radius */
+    --radius-lg: 20px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+    --radius-pill: 999px;
+
+    /* Elevation */
+    --shadow-sm: 0 1px 3px rgba(22,50,79,.06), 0 1px 2px rgba(22,50,79,.04);
+    --shadow-md: 0 4px 12px rgba(22,50,79,.08), 0 12px 32px rgba(22,50,79,.07);
+    --shadow-lg: 0 8px 24px rgba(22,50,79,.12), 0 24px 56px rgba(22,50,79,.10);
+
+    /* Spacing scale */
+    --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+    --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+    /* Motion */
+    --transition: all .16s cubic-bezier(.4,0,.2,1);
+    --transition-slow: all .28s cubic-bezier(.4,0,.2,1);
+
+    /* Type */
+    --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    /* Layout */
+    --container: 1100px;
+    --container-narrow: 760px;
+}
+
+/* ---------- 2. Reset & base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--gray-800);
+    background: var(--canvas);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+h1, h2, h3, h4 { color: var(--navy); line-height: 1.2; letter-spacing: -0.015em; margin: 0; }
+h1 { font-size: clamp(1.65rem, 3.6vw, 2.2rem); font-weight: 800; }
+h2 { font-size: clamp(1.25rem, 2.4vw, 1.5rem); font-weight: 800; }
+h3 { font-size: 1.05rem; font-weight: 700; }
+p  { margin: 0; }
+
+a { color: var(--navy); text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
+
+img, svg { max-width: 100%; }
+
+:focus-visible {
+    outline: 3px solid var(--navy);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+::selection { background: var(--sky-mid); color: var(--navy); }
+
+/* ---------- 3. Layout ---------- */
+.container { width: 100%; max-width: var(--container); margin: 0 auto; padding: 0 var(--sp-5); }
+.container-narrow { max-width: var(--container-narrow); }
+
+main { flex: 1 0 auto; padding-bottom: var(--sp-8); }
+
+.stack > * + * { margin-top: var(--sp-4); }
+
+/* Page header band */
+.page-header {
+    background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 55%, var(--navy-light) 100%);
+    color: #fff;
+    padding: var(--sp-7) 0 var(--sp-6);
+    margin-bottom: var(--sp-6);
+    position: relative;
+    overflow: hidden;
+}
+.page-header::after {
+    content: "";
+    position: absolute;
+    right: -140px; top: -160px;
+    width: 420px; height: 420px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    pointer-events: none;
+}
+.page-header-inner { width: 100%; max-width: var(--container); margin: 0 auto; padding: 0 var(--sp-5); position: relative; }
+.page-header h1 { color: #fff; }
+.page-header p { margin-top: var(--sp-3); color: rgba(255,255,255,.82); max-width: 60ch; }
+
+.page-eyebrow {
+    font-size: .78rem; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; color: rgba(255,255,255,.65);
+    margin-bottom: var(--sp-2);
+}
+
+/* ---------- 4. Site header / nav ---------- */
+.site-header {
+    background: rgba(255,255,255,.92);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--sky-mid);
+    position: sticky; top: 0; z-index: 50;
+}
+
+.site-header-inner {
+    max-width: var(--container); margin: 0 auto;
+    padding: var(--sp-3) var(--sp-5);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4);
+    position: relative;
+}
+
+.site-brand {
+    display: inline-flex; align-items: center; gap: var(--sp-2);
+    text-decoration: none; font-weight: 800; font-size: 1.05rem;
+    color: var(--navy); letter-spacing: -0.02em; white-space: nowrap;
+}
+.site-brand svg { color: var(--navy); flex-shrink: 0; }
+
+.site-nav { display: flex; gap: var(--sp-1); align-items: center; }
+
+.site-nav a {
+    text-decoration: none; font-weight: 600; font-size: .92rem;
+    color: var(--gray-600); padding: 9px 14px;
+    border-radius: var(--radius-pill); transition: var(--transition);
+    white-space: nowrap;
+}
+.site-nav a:hover { background: var(--sky); color: var(--navy); }
+.site-nav a[aria-current="page"] { background: var(--sky); color: var(--navy); font-weight: 700; }
+
+.nav-toggle {
+    display: none;
+    background: var(--surface); border: 1.5px solid var(--sky-mid);
+    border-radius: var(--radius-sm);
+    width: 44px; height: 44px; cursor: pointer;
+    align-items: center; justify-content: center; color: var(--navy);
+}
+
+@media (max-width: 780px) {
+    .nav-toggle { display: inline-flex; }
+    .site-nav {
+        display: none; position: absolute; left: 0; right: 0; top: 100%;
+        background: var(--surface); border-bottom: 1px solid var(--sky-mid);
+        flex-direction: column; align-items: stretch;
+        padding: var(--sp-2) var(--sp-4) var(--sp-4);
+        box-shadow: var(--shadow-md);
+    }
+    .site-nav.is-open { display: flex; }
+    .site-nav a { padding: 14px; font-size: 1rem; border-radius: var(--radius-sm); }
+}
+
+/* Skip link */
+.skip-link {
+    position: absolute; left: -9999px;
+    background: var(--navy); color: #fff;
+    padding: 12px 18px; font-weight: 700; z-index: 100;
+    border-radius: 0 0 var(--radius-sm) 0; text-decoration: none;
+}
+.skip-link:focus { left: 0; top: 0; }
+
+/* ---------- 5. Buttons ---------- */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+    font-family: inherit; font-size: .97rem; font-weight: 700;
+    padding: 13px 24px; min-height: 48px;
+    border-radius: var(--radius-pill);
+    border: 2px solid transparent;
+    cursor: pointer; text-decoration: none;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+.btn:active { transform: translateY(0) !important; }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: .6; cursor: not-allowed; transform: none !important; }
+
+.btn-primary {
+    background: var(--navy); color: #fff;
+    box-shadow: 0 2px 8px rgba(22,50,79,.24);
+}
+.btn-primary:hover:not(:disabled) {
+    background: var(--navy-light); transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background: var(--surface); color: var(--navy); border-color: var(--sky-mid);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--sky); border-color: var(--blue-soft); }
+
+.btn-ghost { background: transparent; color: var(--gray-600); }
+.btn-ghost:hover:not(:disabled) { background: var(--sky); color: var(--navy); }
+
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+
+.btn-sm { padding: 8px 16px; min-height: 38px; font-size: .87rem; }
+.btn-lg { padding: 16px 32px; min-height: 56px; font-size: 1.05rem; }
+.btn-block { width: 100%; }
+
+/* ---------- 6. Cards ---------- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--sky-mid);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+.card-interactive { transition: var(--transition); }
+.card-interactive:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--blue-soft); }
+
+.card-header {
+    background: var(--sky);
+    border-bottom: 1px solid var(--sky-mid);
+    padding: var(--sp-4) var(--sp-5);
+}
+.card-header h2, .card-header h3 { margin: 0; }
+.card-header p { margin-top: var(--sp-1); font-size: .87rem; color: var(--gray-600); }
+
+.card-body { padding: var(--sp-5); }
+.card-footer {
+    padding: var(--sp-4) var(--sp-5);
+    border-top: 1px solid var(--sky-mid);
+    background: var(--sky);
+    display: flex; gap: var(--sp-3); flex-wrap: wrap;
+}
+
+/* Stat card for dashboards */
+.stat-card { padding: var(--sp-5); }
+.stat-label { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gray-600); }
+.stat-value { font-size: 2rem; font-weight: 800; color: var(--navy); line-height: 1.1; margin-top: var(--sp-2); }
+.stat-meta  { font-size: .84rem; color: var(--gray-600); margin-top: var(--sp-1); }
+
+.grid { display: grid; gap: var(--sp-4); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 980px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+/* ---------- 7. Forms ---------- */
+.form-group { margin-bottom: var(--sp-5); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-4); }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+.form-label {
+    display: block; font-size: .92rem; font-weight: 700;
+    color: var(--navy); margin-bottom: 7px;
+}
+.required { color: var(--red); }
+
+.form-control {
+    width: 100%; font-family: inherit; font-size: 1rem;
+    color: var(--gray-800); background: var(--surface);
+    border: 1.5px solid var(--sky-mid);
+    border-radius: var(--radius-sm);
+    padding: 13px 15px; min-height: 50px;
+    transition: border-color .14s ease, box-shadow .14s ease;
+}
+textarea.form-control { min-height: 130px; resize: vertical; line-height: 1.55; }
+.form-control::placeholder { color: var(--gray-400); }
+.form-control:hover:not(:disabled) { border-color: var(--blue-soft); }
+.form-control:focus {
+    outline: none; border-color: var(--navy);
+    box-shadow: 0 0 0 4px rgba(22,50,79,.12);
+}
+.form-control:disabled { background: var(--sky); color: var(--gray-400); cursor: not-allowed; }
+
+select.form-control {
+    appearance: none; -webkit-appearance: none; padding-right: 44px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2316324f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 16px center;
+}
+
+.field-hint { font-size: .82rem; color: var(--gray-600); margin: 4px 0 9px; line-height: 1.5; }
+
+.field-error { display: none; font-size: .84rem; font-weight: 600; color: var(--red); margin-top: 7px; }
+.form-group.has-error .field-error { display: block; }
+.form-group.has-error .form-control { border-color: var(--red); box-shadow: 0 0 0 4px rgba(192,57,43,.10); }
+
+.char-count { font-size: .76rem; color: var(--gray-400); text-align: right; margin: 5px 2px 0; }
+
+/* ---------- 8. Alerts / flash ---------- */
+.alert {
+    border-radius: var(--radius-sm);
+    padding: var(--sp-4);
+    font-size: .92rem; line-height: 1.6;
+    border: 1.5px solid; border-left-width: 5px;
+    display: flex; gap: var(--sp-3); align-items: flex-start;
+}
+.alert strong { display: block; margin-bottom: 2px; }
+.alert-icon { flex-shrink: 0; font-weight: 800; line-height: 1.4; }
+
+.alert-error   { background: var(--red-bg);    border-color: var(--red-line);    color: #8c2b21; }
+.alert-success { background: var(--green-bg);  border-color: var(--green-line);  color: #14663f; }
+.alert-warning { background: var(--orange-bg); border-color: var(--orange-line); color: #7c4d06; }
+.alert-info    { background: var(--info-bg);   border-color: var(--sky-mid);     color: var(--navy); }
+
+.flash-stack { max-width: var(--container); margin: var(--sp-4) auto 0; padding: 0 var(--sp-5); }
+.flash-stack .alert { margin-bottom: var(--sp-3); animation: flashIn .3s cubic-bezier(.4,0,.2,1); }
+@keyframes flashIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+.flash-dismiss {
+    margin-left: auto; background: none; border: none; cursor: pointer;
+    font-size: 1.1rem; line-height: 1; color: inherit; opacity: .6;
+    padding: 4px 6px; border-radius: 6px;
+}
+.flash-dismiss:hover { opacity: 1; background: rgba(0,0,0,.06); }
+
+/* ---------- 9. Badges ---------- */
+.badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .78rem; font-weight: 700; letter-spacing: .01em;
+    padding: 5px 12px; border-radius: var(--radius-pill);
+    border: 1px solid;
+}
+.badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.badge-low     { background: var(--green-bg);  border-color: var(--green-line);  color: #14663f; }
+.badge-medium  { background: var(--orange-bg); border-color: var(--orange-line); color: #7c4d06; }
+.badge-high    { background: var(--red-bg);    border-color: var(--red-line);    color: #8c2b21; }
+.badge-neutral { background: var(--sky);       border-color: var(--sky-mid);     color: var(--gray-600); }
+
+/* ---------- 10. Tables (dashboards) ---------- */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.table th {
+    text-align: left; font-size: .78rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--gray-600);
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1.5px solid var(--sky-mid); white-space: nowrap;
+    background: var(--sky);
+}
+.table td { padding: var(--sp-4); border-bottom: 1px solid var(--sky-mid); vertical-align: top; }
+.table tbody tr { transition: background .12s ease; }
+.table tbody tr:hover { background: var(--sky); }
+.table tbody tr:last-child td { border-bottom: none; }
+
+@media (max-width: 640px) {
+    .table th { font-size: .72rem; padding: var(--sp-2) var(--sp-3); }
+    .table td { padding: var(--sp-3); }
+}
+
+/* ---------- 11. Empty / loading states ---------- */
+.empty-state { text-align: center; padding: var(--sp-8) var(--sp-5); }
+.empty-icon {
+    width: 64px; height: 64px; margin: 0 auto var(--sp-4);
+    border-radius: var(--radius-md); background: var(--sky);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; color: var(--blue-soft);
+}
+.empty-state h3 { margin-bottom: var(--sp-2); }
+.empty-state p { color: var(--gray-600); max-width: 42ch; margin: 0 auto var(--sp-5); }
+
+.spinner {
+    width: 18px; height: 18px;
+    border: 2.5px solid rgba(255,255,255,.35);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+.spinner-dark { border-color: rgba(22,50,79,.2); border-top-color: var(--navy); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.skeleton {
+    background: linear-gradient(90deg, var(--sky) 25%, #e7f0f6 50%, var(--sky) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: var(--radius-sm);
+    height: 1em;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ---------- 12. Footer ---------- */
+.site-footer {
+    background: var(--navy-deep);
+    color: rgba(255,255,255,.70);
+    font-size: .85rem; line-height: 1.7;
+    padding: var(--sp-6) 0;
+    margin-top: auto;
+}
+.site-footer-inner {
+    max-width: var(--container); margin: 0 auto; padding: 0 var(--sp-5);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: var(--sp-4); flex-wrap: wrap;
+}
+.site-footer a { color: rgba(255,255,255,.86); text-decoration: none; font-weight: 600; }
+.site-footer a:hover { text-decoration: underline; }
+.footer-note { font-size: .8rem; color: rgba(255,255,255,.5); }
+
+/* ---------- 13. Utilities ---------- */
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.text-muted { color: var(--gray-600); }
+.text-center { text-align: center; }
+.mt-0 { margin-top: 0; } .mb-0 { margin-bottom: 0; }
+
+/* ---------- 14. Motion preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+    .spinner { animation-duration: 1.5s !important; animation-iteration-count: infinite !important; }
+    .skeleton { animation: none; background: var(--sky); }
+}
+
+/* ---------- 15. Print ---------- */
+@media print {
+    .site-header, .site-footer, .btn, .nav-toggle, .skip-link { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border-color: #ccc; }
+}
+
+/* ============ PART 2 — patient intake page (from intake.html) ============ */
+
+    /* ============================================================
+       Multi-step intake journey — visual design pass.
+       One real <form> POSTs to the existing Flask route with the
+       existing field names: clinic_name, full_name, email, phone,
+       concern, urgency, notes. Steps are shown/hidden with JS only.
+       Every var() carries a fallback so the page renders correctly
+       even if base.html doesn't define a token.
+       ============================================================ */
+
+
+    .intake-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 32px;
+        align-items: start;
+    }
+
+    /* ---------- Progress indicator ---------- */
+    .progress-shell { margin-bottom: 26px; }
+
+    .progress-steps {
+        display: flex;
+        align-items: center;
+        list-style: none;
+        margin: 0 0 12px;
+        padding: 0;
+    }
+
+    .progress-step { display: flex; align-items: center; flex: 1; min-width: 0; }
+    .progress-step:last-child { flex: 0; }
+
+    .progress-dot {
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--sky-mid);
+        color: var(--gray-600);
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: var(--transition);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .progress-step.is-active .progress-dot {
+        border-color: var(--navy);
+        background: var(--navy);
+        color: #fff;
+        box-shadow: 0 0 0 5px rgba(22,50,79,0.12), var(--shadow-sm);
+        box-shadow: 0 0 0 5px color-mix(in srgb, var(--navy) 12%, transparent), var(--shadow-sm);
+        transform: scale(1.06);
+    }
+
+    .progress-step.is-done .progress-dot {
+        border-color: var(--navy);
+        background: var(--sky);
+        color: var(--navy);
+    }
+
+    .progress-line {
+        height: 3px;
+        background: var(--sky-mid);
+        flex: 1;
+        margin: 0 10px;
+        border-radius: 3px;
+        transition: var(--transition);
+    }
+    .progress-step.is-done .progress-line { background: var(--navy); }
+    .progress-step:last-child .progress-line { display: none; }
+
+    .progress-caption {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--navy);
+        letter-spacing: 0.01em;
+        margin: 0;
+    }
+    .progress-caption small { font-weight: 500; color: var(--gray-600); font-size: 0.9rem; }
+
+    /* ---------- Cards / sections ---------- */
+    .intake-form-card {
+        background: #fff;
+        border: 1px solid var(--sky-mid);
+        border-radius: var(--radius-md);
+        box-shadow: 0 1px 3px rgba(22,50,79,.05), 0 10px 30px rgba(22,50,79,.06);
+        overflow: hidden;
+    }
+
+    .form-section-header {
+        background: var(--sky);
+        background: linear-gradient(180deg, var(--sky) 0%, color-mix(in srgb, var(--sky) 55%, #fff) 100%);
+        border-bottom: 1px solid var(--sky-mid);
+        padding: 22px 30px;
+    }
+
+    .form-section-header h2 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--navy);
+        margin: 0;
+        letter-spacing: -0.01em;
+        outline: none;
+    }
+
+    .form-section-header p {
+        margin: 5px 0 0;
+        font-size: 0.88rem;
+        color: var(--gray-600);
+        line-height: 1.5;
+    }
+
+    .form-body { padding: 30px; }
+
+    .step-panel[hidden] { display: none; }
+    .step-panel { animation: stepIn .28s ease; }
+    @keyframes stepIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    /* ---------- Fields ---------- */
+
+    .form-label {
+        display: block;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 7px;
+    }
+    .required { color: var(--red); }
+
+    .form-control {
+        width: 100%;
+        box-sizing: border-box;
+        font-family: inherit;
+        font-size: 1rem;
+        color: var(--navy);
+        background: #fff;
+        border: 1.5px solid var(--sky-mid);
+        border-radius: var(--radius-sm);
+        padding: 13px 15px;
+        min-height: 50px;
+        transition: border-color .14s ease, box-shadow .14s ease;
+    }
+    textarea.form-control { min-height: 130px; resize: vertical; line-height: 1.55; }
+
+    .form-control::placeholder { color: var(--gray-400); }
+
+    .form-control:hover { border-color: color-mix(in srgb, var(--navy) 35%, var(--sky-mid)); }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--navy);
+        /* fallback first; color-mix overrides where supported */
+        box-shadow: 0 0 0 4px rgba(22, 50, 79, 0.13);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--navy) 13%, transparent);
+    }
+
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2316324f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        padding-right: 44px;
+    }
+
+    .field-hint {
+        font-size: 0.82rem;
+        color: var(--gray-600);
+        margin: 4px 0 9px;
+        line-height: 1.5;
+    }
+
+    .char-count {
+        font-size: 0.76rem;
+        color: var(--gray-400);
+        text-align: right;
+        margin: 5px 2px 0;
+    }
+
+    .field-error {
+        display: none;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--red);
+        margin-top: 7px;
+    }
+    .form-group.has-error .field-error { display: block; }
+    .form-group.has-error .form-control {
+        border-color: var(--red);
+        box-shadow: 0 0 0 4px rgba(179,38,30,0.10);
+    }
+
+    .form-control:focus-visible,
+    .btn-nav:focus-visible,
+    .submit-btn:focus-visible,
+    .urgency-label:focus-within,
+    .edit-link:focus-visible {
+        outline: 3px solid var(--navy);
+        outline-offset: 2px;
+    }
+
+    /* ---------- Emergency notice ---------- */
+    .emergency-banner {
+        background: #fff8e6;
+        border: 1.5px solid #f4dfa0;
+        border-left: 5px solid #d99a1b;
+        border-radius: var(--radius-sm);
+        padding: 16px 20px;
+        display: flex;
+        gap: 13px;
+        align-items: flex-start;
+        margin-bottom: 26px;
+    }
+
+    .emergency-banner .icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 1px; }
+
+    .emergency-banner strong {
+        display: block;
+        color: #7c3d06;
+        font-size: 0.95rem;
+        margin-bottom: 3px;
+        letter-spacing: 0.005em;
+    }
+
+    .emergency-banner p {
+        margin: 0;
+        font-size: 0.86rem;
+        color: #7d5a2c;
+        line-height: 1.6;
+    }
+
+    /* ---------- Urgency ---------- */
+    .urgency-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+    .urgency-option { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+    .urgency-label {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 18px 16px;
+        border: 2px solid var(--sky-mid);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: var(--transition);
+        min-height: 44px;
+        background: #fff;
+    }
+
+    .urgency-label .label-text { font-size: 0.94rem; font-weight: 800; color: var(--navy); }
+    .urgency-label .label-desc { font-size: 0.79rem; color: var(--gray-600); line-height: 1.5; }
+
+    .urgency-label:hover {
+        border-color: var(--navy);
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-1px);
+    }
+
+    #urgency-low:checked + .urgency-label    { border-color: var(--green);  background: #ecf9f2; box-shadow: 0 0 0 4px rgba(30,142,90,0.10); }
+    #urgency-medium:checked + .urgency-label { border-color: var(--orange); background: #fff6e8; box-shadow: 0 0 0 4px rgba(217,123,18,0.10); }
+    #urgency-high:checked + .urgency-label   { border-color: var(--red);    background: #fdf0ef; box-shadow: 0 0 0 4px rgba(192,57,43,0.10); }
+
+    /* ---------- Review step ---------- */
+    .review-list {
+        margin: 0;
+        background: var(--sky);
+        background: color-mix(in srgb, var(--sky) 55%, #fff);
+        border: 1px solid var(--sky-mid);
+        border-radius: var(--radius-sm);
+        padding: 6px 22px;
+    }
+
+    .review-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--sky-mid);
+    }
+    .review-row:last-child { border-bottom: none; }
+
+    .review-row dt {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--gray-600);
+        flex-shrink: 0;
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+    }
+    .review-row dd {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--navy);
+        text-align: right;
+        overflow-wrap: anywhere;
+        white-space: pre-line;
+        max-width: 62%;
+        line-height: 1.5;
+    }
+
+    .edit-link {
+        background: none;
+        border: none;
+        padding: 4px 6px;
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--navy);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
+        border-radius: 6px;
+    }
+    .edit-link:hover { background: var(--sky); }
+
+    /* ---------- Navigation buttons ---------- */
+    .step-nav { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
+
+    .btn-nav {
+        padding: 14px 26px;
+        min-height: 50px;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: 0.97rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid var(--sky-mid);
+        background: #fff;
+        color: var(--navy);
+    }
+
+    .btn-nav:hover { background: var(--sky); border-color: color-mix(in srgb, var(--navy) 30%, var(--sky-mid)); }
+
+    .btn-nav.btn-primary {
+        background: var(--navy);
+        border-color: var(--navy);
+        color: #fff;
+        margin-left: auto;
+        box-shadow: 0 3px 12px rgba(22,50,79,0.28);
+        box-shadow: 0 3px 12px color-mix(in srgb, var(--navy) 28%, transparent);
+    }
+
+    .btn-nav.btn-primary:hover {
+        background: var(--navy-light);
+        border-color: var(--navy-light);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+    .btn-nav.btn-primary:active { transform: none; }
+
+    .submit-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(130deg, var(--navy) 0%, var(--navy-light) 100%);
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 56px;
+        box-shadow: 0 4px 16px rgba(22,50,79,0.30);
+        box-shadow: 0 4px 16px color-mix(in srgb, var(--navy) 30%, transparent);
+    }
+
+    .submit-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow-md); filter: brightness(1.06); }
+    .submit-btn:active:not(:disabled) { transform: none; }
+    .submit-btn:disabled { opacity: 0.78; cursor: wait; }
+
+    .spinner {
+        width: 18px; height: 18px;
+        border: 2.5px solid rgba(255,255,255,0.35);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar-card {
+        background: #fff;
+        border: 1px solid var(--sky-mid);
+        border-radius: var(--radius-md);
+        padding: 26px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-card h3 {
+        font-size: 0.98rem;
+        font-weight: 800;
+        color: var(--navy);
+        margin: 0 0 14px;
+        letter-spacing: -0.005em;
+    }
+
+    .info-list { list-style: none; margin: 0; padding: 0; }
+    .info-list li {
+        display: flex;
+        gap: 11px;
+        align-items: flex-start;
+        padding: 9px 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--sky-mid) 60%, #fff);
+        font-size: 0.88rem;
+        color: var(--gray-600);
+        line-height: 1.55;
+    }
+    .info-list li:last-child { border-bottom: none; }
+    .info-list li .icon { flex-shrink: 0; }
+
+    .privacy-note {
+        background: var(--sky);
+        border: 1px solid var(--sky-mid);
+        border-radius: var(--radius-sm);
+        padding: 15px 16px;
+        font-size: 0.83rem;
+        color: var(--gray-600);
+        line-height: 1.55;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 900px) {
+        .intake-layout { grid-template-columns: 1fr; }
+        .intake-sidebar { order: 2; }
+        .page-header { padding: 36px 20px 32px; }
+    }
+
+    @media (max-width: 576px) {
+        .form-body { padding: 22px 18px; }
+        .form-section-header { padding: 18px; }
+        .urgency-selector { grid-template-columns: 1fr; }
+        .progress-dot { width: 32px; height: 32px; font-size: 0.8rem; }
+        .progress-line { margin: 0 6px; }
+        .btn-nav, .btn-nav.btn-primary { width: 100%; margin-left: 0; justify-content: center; }
+        .review-list { padding: 4px 16px; }
+        .review-row { flex-direction: column; gap: 4px; }
+        .review-row dd { text-align: left; max-width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .btn-nav, .submit-btn, .progress-dot, .urgency-label, .progress-line { transition: none; }
+        .step-panel { animation: none; }
+        .spinner { animation-duration: 1.5s; }
+    }
+
+</style>
+</head>
+
+<body>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header class="site-header">
+    <div class="site-header-inner">
+        <a class="site-brand" href="{{ url_for('index') }}">
+            <svg width="24" height="24" viewBox="0 0 26 26" aria-hidden="true">
+                <rect x="1" y="16" width="8" height="8" rx="2.5" fill="currentColor" opacity=".3"/>
+                <rect x="9" y="9" width="8" height="8" rx="2.5" fill="currentColor" opacity=".6"/>
+                <rect x="17" y="2" width="8" height="8" rx="2.5" fill="currentColor"/>
+            </svg>
+            MyNextStepHealth
+        </a>
+
+        <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteNav" aria-label="Open menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16"/>
+            </svg>
+        </button>
+
+        <!-- Add your other routes to this block as the SaaS grows -->
+        <nav class="site-nav" id="siteNav" aria-label="Main">
+
+            <a href="{{ url_for('intake') }}" aria-current="page">Patient Intake</a>
+
+        </nav>
+    </div>
+</header>
+
+<!-- Flash region. In the Flask version base.html renders this from
+     get_flashed_messages(). Kept here (hidden) so the alert styles
+     stay testable in the preview. Remove `hidden` to see it. -->
+<div class="flash-stack" role="region" aria-label="Notifications" hidden>
+    <div class="alert alert-success" role="alert">
+        <span class="alert-icon" aria-hidden="true">&check;</span>
+        <div>Your request has been sent to the clinic.</div>
+        <button type="button" class="flash-dismiss" aria-label="Dismiss notification">&times;</button>
+    </div>
+</div>
+
+<main id="main-content">
+
+<div class="page-header">
+    <div class="page-header-inner">
+        <h1>Patient Intake</h1>
+        <p>A few short steps to reach your clinic. Fields marked with * are required.</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="intake-layout">
+
+        <!-- ─── Main journey ─── -->
+        <div>
+            <!-- Emergency notice: always visible, above the journey -->
+            <div class="emergency-banner" role="alert">
+                <span class="icon" aria-hidden="true">⚠️</span>
+                <div>
+                    <strong>This form is not for medical emergencies</strong>
+                    <p>If you or someone else needs urgent emergency care, do not use this form.
+                       Call your local emergency services now or go to your nearest emergency
+                       department. This service does not replace emergency medical care.</p>
+                </div>
+            </div>
+
+            <!-- Progress indicator -->
+            <div class="progress-shell">
+                <ol class="progress-steps" aria-hidden="true">
+                    <li class="progress-step is-active" data-step-marker="1"><span class="progress-dot">1</span><span class="progress-line"></span></li>
+                    <li class="progress-step" data-step-marker="2"><span class="progress-dot">2</span><span class="progress-line"></span></li>
+                    <li class="progress-step" data-step-marker="3"><span class="progress-dot">3</span><span class="progress-line"></span></li>
+                    <li class="progress-step" data-step-marker="4"><span class="progress-dot">4</span><span class="progress-line"></span></li>
+                </ol>
+                <p class="progress-caption" id="progressCaption" role="status" aria-live="polite">
+                    Step 1 of 4 — <small>Select your clinic</small>
+                </p>
+            </div>
+
+            <!-- Single real form; steps are shown/hidden with JS.
+                 novalidate: validation handled per-step so hidden
+                 required fields never block native submission. -->
+            <form method="POST" action="{{ url_for('intake') }}" id="intakeForm" novalidate>
+
+                {# CSRF token — proves this POST came from our own page.
+                   Without it Flask-WTF rejects the submission. #}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                <div class="intake-form-card">
+
+                    <!-- ============ STEP 1: Clinic ============ -->
+                    <section class="step-panel" data-step="1" aria-labelledby="step1-h">
+                        <div class="form-section-header">
+                            <h2 id="step1-h" tabindex="-1">Select your clinic</h2>
+                            <p>Your request will be sent directly to the clinic you choose.</p>
+                        </div>
+                        <div class="form-body">
+                            <div class="form-group" data-field="clinic_name">
+                                <label class="form-label" for="clinic_name">
+                                    Clinic name <span class="required">*</span>
+                                </label>
+                                <select class="form-control" id="clinic_name" name="clinic_name">
+                                    {# Only show the placeholder when there's a real choice to make #}
+                                    {% if clinics|length != 1 %}
+                                    <option value="" disabled selected>Select your clinic...</option>
+                                    {% endif %}
+                                    {% for c in clinics %}
+                                    <option value="{{ c.slug }}"
+                                        {{ 'selected' if clinics|length == 1 or preselected == c.slug else '' }}>
+                                        {{ c.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <p class="field-error" id="err-clinic_name">Please choose your clinic so we know where to send your request.</p>
+                            </div>
+
+                            <div class="step-nav">
+                                <button type="button" class="btn-nav btn-primary" data-next>Continue →</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ============ STEP 2: Personal details ============ -->
+                    <section class="step-panel" data-step="2" hidden aria-labelledby="step2-h">
+                        <div class="form-section-header">
+                            <h2 id="step2-h" tabindex="-1">Your details</h2>
+                            <p>So the clinic can identify you and get back to you.</p>
+                        </div>
+                        <div class="form-body">
+                            <div class="form-group" data-field="full_name">
+                                <label class="form-label" for="full_name">
+                                    Full name <span class="required">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="full_name" name="full_name"
+                                       autocomplete="name" placeholder="e.g. Jane Smith" />
+                                <p class="field-error" id="err-full_name">Please enter your full name.</p>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group" data-field="email">
+                                    <label class="form-label" for="email">
+                                        Email address <span class="required">*</span>
+                                    </label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           autocomplete="email" inputmode="email" placeholder="jane@example.com" />
+                                    <p class="field-hint">The clinic will send your confirmation here.</p>
+                                    <p class="field-error" id="err-email">Enter a valid email address, like name@example.com.</p>
+                                </div>
+                                <div class="form-group" data-field="phone">
+                                    <label class="form-label" for="phone">
+                                        Phone number <span class="required">*</span>
+                                    </label>
+                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                           autocomplete="tel" inputmode="tel" placeholder="+44 7700 000000" />
+                                    <p class="field-error" id="err-phone">Please enter a phone number the clinic can reach you on.</p>
+                                </div>
+                            </div>
+
+                            <div class="step-nav">
+                                <button type="button" class="btn-nav" data-back>← Back</button>
+                                <button type="button" class="btn-nav btn-primary" data-next>Continue →</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ============ STEP 3: Reason for contact ============ -->
+                    <section class="step-panel" data-step="3" hidden aria-labelledby="step3-h">
+                        <div class="form-section-header">
+                            <h2 id="step3-h" tabindex="-1">Reason for contact</h2>
+                            <p>Describe what you need in your own words — your clinic's team will review it.</p>
+                        </div>
+                        <div class="form-body">
+                            <div class="form-group" data-field="concern">
+                                <label class="form-label" for="concern">
+                                    Your concern or question <span class="required">*</span>
+                                </label>
+                                <p class="field-hint">Include what's happening, how long it has been going on, and anything that makes it better or worse. There's no wrong way to write this.</p>
+                                <textarea class="form-control" id="concern" name="concern"
+                                          aria-describedby="concern-count"
+                                          placeholder="Describe your symptoms or the reason for contacting the clinic..."></textarea>
+                                <p class="char-count" id="concern-count" aria-live="off">0 characters</p>
+                                <p class="field-error" id="err-concern">Please describe your concern so the clinic can help you.</p>
+                            </div>
+
+                            <div class="form-group" data-field="urgency">
+                                <label class="form-label" id="urgency-legend">
+                                    How soon do you feel you need a response? <span class="required">*</span>
+                                </label>
+                                <p class="field-hint">This helps the clinic prioritise your request. The clinical team will always make the final assessment of your care.</p>
+                                <div class="urgency-selector" role="radiogroup" aria-labelledby="urgency-legend">
+                                    <div>
+                                        <input type="radio" class="urgency-option" id="urgency-low" name="urgency" value="Low" />
+                                        <label class="urgency-label" for="urgency-low">
+                                            <span class="label-text">Routine</span>
+                                            <span class="label-desc">A response within the clinic's usual timeframe is fine.</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <input type="radio" class="urgency-option" id="urgency-medium" name="urgency" value="Medium" />
+                                        <label class="urgency-label" for="urgency-medium">
+                                            <span class="label-text">Soon</span>
+                                            <span class="label-desc">I'd appreciate a response in the next day or two.</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <input type="radio" class="urgency-option" id="urgency-high" name="urgency" value="High" />
+                                        <label class="urgency-label" for="urgency-high">
+                                            <span class="label-text">As soon as possible</span>
+                                            <span class="label-desc">This is worrying me and I'd like a same-day response if possible. Not for emergencies.</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <p class="field-error" id="err-urgency">Please choose how quickly you'd like a response.</p>
+                            </div>
+
+                            <div class="form-group" data-field="notes" style="margin-bottom:0;">
+                                <label class="form-label" for="notes">
+                                    Additional notes <span style="color:var(--gray-400); font-weight:400;">(optional)</span>
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" style="min-height:85px;"
+                                          placeholder="Allergies, current medications, or anything else you'd like the clinic to know..."></textarea>
+                            </div>
+
+                            <div class="step-nav">
+                                <button type="button" class="btn-nav" data-back>← Back</button>
+                                <button type="button" class="btn-nav btn-primary" data-next>Review my details →</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ============ STEP 4: Review & submit ============ -->
+                    <section class="step-panel" data-step="4" hidden aria-labelledby="step4-h">
+                        <div class="form-section-header">
+                            <h2 id="step4-h" tabindex="-1">Check and send</h2>
+                            <p>Make sure everything is right — you can go back and change anything.</p>
+                        </div>
+                        <div class="form-body">
+                            <dl class="review-list" id="reviewList">
+                                <div class="review-row">
+                                    <dt>Clinic <button type="button" class="edit-link" data-goto="1">Edit</button></dt>
+                                    <dd id="rv-clinic">—</dd>
+                                </div>
+                                <div class="review-row">
+                                    <dt>Full name <button type="button" class="edit-link" data-goto="2">Edit</button></dt>
+                                    <dd id="rv-name">—</dd>
+                                </div>
+                                <div class="review-row">
+                                    <dt>Email <button type="button" class="edit-link" data-goto="2">Edit</button></dt>
+                                    <dd id="rv-email">—</dd>
+                                </div>
+                                <div class="review-row">
+                                    <dt>Phone <button type="button" class="edit-link" data-goto="2">Edit</button></dt>
+                                    <dd id="rv-phone">—</dd>
+                                </div>
+                                <div class="review-row">
+                                    <dt>Concern <button type="button" class="edit-link" data-goto="3">Edit</button></dt>
+                                    <dd id="rv-concern">—</dd>
+                                </div>
+                                <div class="review-row">
+                                    <dt>Response preference <button type="button" class="edit-link" data-goto="3">Edit</button></dt>
+                                    <dd id="rv-urgency">—</dd>
+                                </div>
+                                <div class="review-row" id="rv-notes-row">
+                                    <dt>Notes <button type="button" class="edit-link" data-goto="3">Edit</button></dt>
+                                    <dd id="rv-notes">—</dd>
+                                </div>
+                            </dl>
+
+                            <div class="emergency-banner" role="note" style="margin:24px 0 0;">
+                                <span class="icon" aria-hidden="true">⚠️</span>
+                                <p style="margin:0; font-size:0.85rem; color:#795548; line-height:1.55;">
+                                    <strong style="display:inline; color:#7c3d06;">Reminder:</strong>
+                                    if your situation becomes an emergency, contact your local emergency
+                                    services immediately rather than waiting for a reply to this form.
+                                </p>
+                            </div>
+
+                            <button type="submit" class="submit-btn" id="submitBtn">
+                                <span id="submitLabel">Send to my clinic</span>
+                                <span aria-hidden="true" id="submitArrow">→</span>
+                            </button>
+
+                            <div class="step-nav" style="margin-top:16px;">
+                                <button type="button" class="btn-nav" data-back>← Back</button>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </form>
+        </div>
+
+        <!-- ─── Sidebar ─── -->
+        <aside class="intake-sidebar" aria-label="Helpful information">
+            <div class="sidebar-card">
+                <h3>What happens next?</h3>
+                <ul class="info-list">
+                    <li><span class="icon" aria-hidden="true">📨</span> Your details are sent securely to your selected clinic</li>
+                    <li><span class="icon" aria-hidden="true">📬</span> The clinic receives an instant notification</li>
+                    <li><span class="icon" aria-hidden="true">📞</span> A member of staff will contact you about the next step</li>
+                    <li><span class="icon" aria-hidden="true">🗂️</span> Your request is tracked in the clinic's dashboard</li>
+                </ul>
+            </div>
+
+            <div class="sidebar-card">
+                <h3>Before you send</h3>
+                <ul class="info-list">
+                    <li><span class="icon" aria-hidden="true">✅</span> Check your email address and phone number are correct</li>
+                    <li><span class="icon" aria-hidden="true">✅</span> Describe your concern as clearly as you can</li>
+                    <li><span class="icon" aria-hidden="true">✅</span> Add allergies or medications in the notes</li>
+                </ul>
+            </div>
+
+            <div class="privacy-note">
+                🔒 Your information is used only by your selected clinic to manage your care.
+                Please don't include card numbers or passwords in your message.
+            </div>
+        </aside>
+
+    </div>
+</div>
+
+</main>
+
+<footer class="site-footer">
+    <div class="site-footer-inner">
+        <div>
+            <strong style="color:#fff;">MyNextStepHealth</strong>
+            <div class="footer-note">The next step should be simple.</div>
+        </div>
+        <div class="footer-note">
+            Prototype — not a live medical service. Not for emergencies.
+        </div>
+    </div>
+</footer>
+
+<script>
+/* ---------- from base.html: nav toggle + flash dismiss ---------- */
+(function () {
+    "use strict";
+
+    /* Mobile navigation toggle */
+    var toggle = document.getElementById("navToggle");
+    var nav = document.getElementById("siteNav");
+    if (toggle && nav) {
+        toggle.addEventListener("click", function () {
+            var open = nav.classList.toggle("is-open");
+            toggle.setAttribute("aria-expanded", String(open));
+            toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+        });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && nav.classList.contains("is-open")) {
+                nav.classList.remove("is-open");
+                toggle.setAttribute("aria-expanded", "false");
+                toggle.focus();
+            }
+        });
+    }
+
+    /* Dismissible flash messages (visual only — no server state changes) */
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest(".flash-dismiss");
+        if (btn) {
+            var alertEl = btn.closest(".alert");
+            if (alertEl) alertEl.remove();
+        }
+    });
+})();
+
+/* ---------- from intake.html: multi-step intake journey ---------- */
+(function () {
+    "use strict";
+
+    var form = document.getElementById("intakeForm");
+    var panels = Array.prototype.slice.call(form.querySelectorAll(".step-panel"));
+    var markers = Array.prototype.slice.call(document.querySelectorAll("[data-step-marker]"));
+    var caption = document.getElementById("progressCaption");
+    var TOTAL = panels.length;
+    var current = 1;
+
+    var stepTitles = {
+        1: "Select your clinic",
+        2: "Your details",
+        3: "Reason for contact",
+        4: "Check and send"
+    };
+
+    /* ---------- validation ---------- */
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function setError(fieldName, hasError) {
+        var group = form.querySelector('[data-field="' + fieldName + '"]');
+        if (group) {
+            group.classList.toggle("has-error", hasError);
+            // Announce errors to assistive tech
+            var controls = group.querySelectorAll(".form-control, .urgency-option");
+            var errEl = document.getElementById("err-" + fieldName);
+            Array.prototype.forEach.call(controls, function (c) {
+                if (hasError) {
+                    c.setAttribute("aria-invalid", "true");
+                    if (errEl) c.setAttribute("aria-describedby", errEl.id);
+                } else {
+                    c.removeAttribute("aria-invalid");
+                    if (errEl && c.getAttribute("aria-describedby") === errEl.id) {
+                        c.removeAttribute("aria-describedby");
+                    }
+                }
+            });
+        }
+        return hasError;
+    }
+
+    function validateStep(step) {
+        var invalid = [];
+        if (step === 1) {
+            if (setError("clinic_name", !form.clinic_name.value)) invalid.push(form.clinic_name);
+        }
+        if (step === 2) {
+            if (setError("full_name", !form.full_name.value.trim())) invalid.push(form.full_name);
+            if (setError("email", !EMAIL_RE.test(form.email.value.trim()))) invalid.push(form.email);
+            if (setError("phone", !form.phone.value.trim())) invalid.push(form.phone);
+        }
+        if (step === 3) {
+            if (setError("concern", !form.concern.value.trim())) invalid.push(form.concern);
+            var urgencyChosen = !!form.querySelector('input[name="urgency"]:checked');
+            if (setError("urgency", !urgencyChosen)) invalid.push(document.getElementById("urgency-low"));
+        }
+        if (invalid.length) {
+            invalid[0].focus();
+            return false;
+        }
+        return true;
+    }
+
+    /* Character counter for the concern textarea */
+    var concernCount = document.getElementById("concern-count");
+    form.concern.addEventListener("input", function () {
+        var n = form.concern.value.length;
+        concernCount.textContent = n + (n === 1 ? " character" : " characters");
+    });
+
+    /* Clear a field's error as soon as it's corrected */
+    form.addEventListener("input", function (e) {
+        var group = e.target.closest(".form-group");
+        if (group) group.classList.remove("has-error");
+    });
+    form.addEventListener("change", function (e) {
+        if (e.target.name === "urgency") setError("urgency", false);
+    });
+
+    /* ---------- review population ---------- */
+    function populateReview() {
+        var clinicSelect = form.clinic_name;
+        var clinicText = clinicSelect.selectedIndex > 0
+            ? clinicSelect.options[clinicSelect.selectedIndex].text.trim() : "—";
+        var urgencyInput = form.querySelector('input[name="urgency"]:checked');
+        var urgencyText = "—";
+        if (urgencyInput) {
+            var lbl = form.querySelector('label[for="' + urgencyInput.id + '"] .label-text');
+            urgencyText = lbl ? lbl.textContent : urgencyInput.value;
+        }
+        document.getElementById("rv-clinic").textContent = clinicText;
+        document.getElementById("rv-name").textContent = form.full_name.value.trim() || "—";
+        document.getElementById("rv-email").textContent = form.email.value.trim() || "—";
+        document.getElementById("rv-phone").textContent = form.phone.value.trim() || "—";
+        document.getElementById("rv-concern").textContent = form.concern.value.trim() || "—";
+        document.getElementById("rv-urgency").textContent = urgencyText;
+        var notes = form.notes.value.trim();
+        document.getElementById("rv-notes").textContent = notes || "None";
+    }
+
+    /* ---------- step navigation ---------- */
+    function goTo(step) {
+        current = step;
+        panels.forEach(function (p) {
+            p.hidden = parseInt(p.getAttribute("data-step"), 10) !== step;
+        });
+        markers.forEach(function (m) {
+            var n = parseInt(m.getAttribute("data-step-marker"), 10);
+            m.classList.toggle("is-active", n === step);
+            m.classList.toggle("is-done", n < step);
+        });
+        caption.innerHTML = "Step " + step + " of " + TOTAL + " — <small>" + stepTitles[step] + "</small>";
+        if (step === TOTAL) populateReview();
+        window.scrollTo({ top: 0 });
+        var heading = document.getElementById("step" + step + "-h");
+        if (heading) heading.focus();
+    }
+
+    form.addEventListener("click", function (e) {
+        var next = e.target.closest("[data-next]");
+        var back = e.target.closest("[data-back]");
+        var jump = e.target.closest("[data-goto]");
+        if (next && validateStep(current)) goTo(Math.min(current + 1, TOTAL));
+        if (back) goTo(Math.max(current - 1, 1));
+        if (jump) goTo(parseInt(jump.getAttribute("data-goto"), 10));
+    });
+
+    /* Enter key advances instead of submitting early */
+    form.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && current < TOTAL && e.target.tagName !== "TEXTAREA") {
+            e.preventDefault();
+            if (validateStep(current)) goTo(current + 1);
+        }
+    });
+
+    /* ---------- final submit (unchanged Flask POST) ---------- */
+    var submitting = false;
+
+    form.addEventListener("submit", function (e) {
+        // Safety net: re-validate everything before the real POST.
+        // Navigate to a failing step FIRST so its fields are visible
+        // and focus() can actually land (focus on hidden elements is a no-op).
+        for (var s = 1; s <= 3; s++) {
+            if (!validateStep(s)) {
+                e.preventDefault();
+                goTo(s);
+                validateStep(s); // re-run now that the step is visible, to place focus
+                return;
+            }
+        }
+        submitting = true;
+        var btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        btn.setAttribute("aria-busy", "true");
+        document.getElementById("submitArrow").outerHTML = '<span class="spinner" aria-hidden="true"></span>';
+        document.getElementById("submitLabel").textContent = "Sending to your clinic...";
+    });
+
+    /* ---------- unsaved-data guard ----------
+       Warn before leaving mid-journey so patients don't lose what
+       they've typed. Deliberately in-memory only: no localStorage /
+       sessionStorage autosave, since this is patient data. */
+    var isDirty = false;
+    form.addEventListener("input", function () { isDirty = true; });
+    window.addEventListener("beforeunload", function (e) {
+        if (isDirty && !submitting) {
+            e.preventDefault();
+            e.returnValue = "";
+        }
+    });
+
+    goTo(1);
+})();
+</script>
+</body>
+</html>
