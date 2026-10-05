@@ -1,4 +1,6 @@
-from app import app
+from app import app, init_db
+
+init_db()
 
 
 def test_homepage():
